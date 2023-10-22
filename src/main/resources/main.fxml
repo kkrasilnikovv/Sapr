@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.VBox?>
+<VBox alignment="CENTER" spacing="20.0" xmlns:fx="http://javafx.com/fxml"
+      fx:controller="kkrasilnikovv.main.Controller" prefHeight="400" prefWidth="400">
+    <Label text="Система автоматизации прочностных расчётов стержневых систем" style="-fx-font-size: 20"/>
+    <Label text="Красильников Иван ИДБ-21-11"/>
+    <Button fx:id="preProcessorButton" text="Препроцессор" onMouseClicked="#preProcessorEvent" minHeight="50" minWidth="200"
+            id="preprocessor"/>
+    <Button fx:id="processorButton" text="Процессор" onMouseClicked="#processorEvent" minHeight="50" minWidth="200" id="processor"/>
+    <Button fx:id="postProcessorButton" text="Постпроцессор" onMouseClicked="#postProcessorEvent" minHeight="50" minWidth="200"
+            id="postprocessor"/>
+</VBox>
