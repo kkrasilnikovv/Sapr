@@ -5,12 +5,22 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import kkrasilnikovv.preprocessor.model.SavingFile;
+import lombok.Getter;
+import lombok.Setter;
 
+import java.io.File;
 import java.io.IOException;
 
 public class Main extends Application {
     private static Stage showsScene;
     private static Scene mainScene;
+    @Setter
+    @Getter
+    private static File dataFile;
+    @Setter
+    @Getter
+    private static SavingFile dataGSONFile;
 
     @Override
     public void start(Stage primaryStage) throws IOException {

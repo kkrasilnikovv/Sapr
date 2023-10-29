@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.io.Serializable;
+
 @AllArgsConstructor
 @Getter
 @Setter
@@ -13,22 +14,17 @@ public class BeamData implements Serializable {
     private final SimpleIntegerProperty id;
     private final SimpleIntegerProperty startPoint;
     private final SimpleIntegerProperty endPoint;
-    public BeamData(int id, int startPoint, int endPoint) {
+    private final SimpleIntegerProperty width;
+
+    public BeamData(int id, int startPoint, int endPoint, int width) {
         this.id = new SimpleIntegerProperty(id);
         this.startPoint = new SimpleIntegerProperty(startPoint);
         this.endPoint = new SimpleIntegerProperty(endPoint);
-    }
-
-    public int getId() {
-        return id.get();
+        this.width = new SimpleIntegerProperty(width);
     }
 
     public SimpleIntegerProperty idProperty() {
         return id;
-    }
-
-    public void setId(int id) {
-        this.id.set(id);
     }
 
     public int getStartPoint() {
@@ -39,10 +35,6 @@ public class BeamData implements Serializable {
         return startPoint;
     }
 
-    public void setStartPoint(int startPoint) {
-        this.startPoint.set(startPoint);
-    }
-
     public int getEndPoint() {
         return endPoint.get();
     }
@@ -51,8 +43,18 @@ public class BeamData implements Serializable {
         return endPoint;
     }
 
-    public void setEndPoint(int endPoint) {
-        this.endPoint.set(endPoint);
+
+
+    public int getWidth() {
+        return width.get();
+    }
+
+    public SimpleIntegerProperty width() {
+        return width;
+    }
+
+    public void setWidth(int width) {
+        this.width.set(width);
     }
 }
 

@@ -13,4 +13,6 @@ public class SavingFile {
     private List<PointData> pointList;
     private List<BeamData> beamList;
     private int lastIdPoint;
+    private boolean supportOnLeft;
+    private boolean supportOnRight;
 }
