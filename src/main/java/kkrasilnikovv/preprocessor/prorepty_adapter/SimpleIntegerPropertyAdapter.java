@@ -1,4 +1,4 @@
-package kkrasilnikovv.preprocessor;
+package kkrasilnikovv.preprocessor.prorepty_adapter;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonPrimitive;

@@ -51,6 +51,8 @@
                             </TableColumn>
                             <TableColumn fx:id="widthColumn" prefWidth="100" text="Ширина">
                             </TableColumn>
+                            <TableColumn fx:id="typeColumn" prefWidth="150" text="Тип">
+                            </TableColumn>
                         </columns>
                     </TableView>
                     <HBox spacing="10">

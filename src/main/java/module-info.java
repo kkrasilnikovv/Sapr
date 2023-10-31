@@ -9,4 +9,6 @@ module kkrasilnikovv {
     opens kkrasilnikovv.preprocessor;
     opens kkrasilnikovv.preprocessor.controller;
     opens kkrasilnikovv.preprocessor.model;
+    exports kkrasilnikovv.preprocessor.prorepty_adapter;
+    opens kkrasilnikovv.preprocessor.prorepty_adapter;
 }

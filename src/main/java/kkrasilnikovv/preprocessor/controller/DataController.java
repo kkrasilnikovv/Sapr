@@ -3,21 +3,26 @@ package kkrasilnikovv.preprocessor.controller;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.ComboBoxTableCell;
 import javafx.scene.control.cell.TextFieldTableCell;
+import javafx.stage.DirectoryChooser;
 import javafx.util.converter.IntegerStringConverter;
 import kkrasilnikovv.main.Main;
 import kkrasilnikovv.preprocessor.PreProcessor;
-import kkrasilnikovv.preprocessor.SimpleIntegerPropertyAdapter;
+import kkrasilnikovv.preprocessor.prorepty_adapter.SimpleIntegerPropertyAdapter;
+import kkrasilnikovv.preprocessor.prorepty_adapter.SimpleStringPropertyAdapter;
 import kkrasilnikovv.preprocessor.model.BeamData;
 import kkrasilnikovv.preprocessor.model.PointData;
 import kkrasilnikovv.preprocessor.model.SavingFile;
+import kkrasilnikovv.preprocessor.model.SectionType;
 
 import java.io.*;
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -36,17 +41,22 @@ public class DataController {
     @FXML
     private TableView<BeamData> beamTable;
     @FXML
-    private TableColumn<BeamData, Integer> beamIdColumn, startPointColumn, endPointColumn,widthColumn;
+    private TableColumn<BeamData, Integer> beamIdColumn, startPointColumn, endPointColumn, widthColumn;
+    @FXML
+    private TableColumn<BeamData, String> typeColumn;
     private Gson gson;
     private int lastIdPoint = 0;
     private final ObservableList<PointData> pointList = FXCollections.observableArrayList();
     private final ObservableList<BeamData> beamList = FXCollections.observableArrayList();
     private final ObservableList<Integer> nodeOptions = FXCollections.observableArrayList();
     private boolean isSupportOnRight, isSupportOnLeft;
+    private final ObservableList<String> sectionTypeOptions = FXCollections.observableArrayList();
+
 
     public void initialize() {
         gson = new GsonBuilder()
                 .registerTypeAdapter(SimpleIntegerProperty.class, new SimpleIntegerPropertyAdapter())
+                .registerTypeAdapter(SimpleStringProperty.class, new SimpleStringPropertyAdapter())
                 .create();
         // Инициализация таблицы узлов и колонок
         idColumn.setCellValueFactory(cellData -> cellData.getValue().idProperty().asObject());
@@ -65,14 +75,20 @@ public class DataController {
         startPointColumn.setCellValueFactory(cellData -> cellData.getValue().startPointProperty().asObject());
         endPointColumn.setCellValueFactory(cellData -> cellData.getValue().endPointProperty().asObject());
         widthColumn.setCellValueFactory(cellData -> cellData.getValue().width().asObject());
+        typeColumn.setCellValueFactory(cellData -> cellData.getValue().sectionType());
 
         beamIdColumn.setCellFactory(TextFieldTableCell.forTableColumn(new IntegerStringConverter()));
         widthColumn.setCellFactory(TextFieldTableCell.forTableColumn(new IntegerStringConverter()));
         startPointColumn.setCellFactory(ComboBoxTableCell.forTableColumn(new IntegerStringConverter(), nodeOptions));
         endPointColumn.setCellFactory(ComboBoxTableCell.forTableColumn(new IntegerStringConverter(), nodeOptions));
+        typeColumn.setCellFactory(ComboBoxTableCell.forTableColumn(sectionTypeOptions));
 
         // Привязываем список стержней к таблице
         beamTable.setItems(beamList);
+        sectionTypeOptions.addAll(Arrays.stream(SectionType.values())
+                .map(SectionType::toString)
+                .toList());
+
         loadFromFile(Main.getDataGSONFile());
     }
 
@@ -89,7 +105,7 @@ public class DataController {
     public void addBeam() {
         // Создаем новый стержень и добавляем его в список
         int newId = beamList.size() + 1; // Вычисляем новый номер стержня
-        BeamData newBeam = new BeamData(newId, 0, 0,0); // Замените значения на фактические
+        BeamData newBeam = new BeamData(newId, 0, 0, 0, SectionType.TYPE_1.toString()); // Замените значения на фактические
         beamList.add(newBeam);
     }
 
@@ -134,19 +150,41 @@ public class DataController {
     }
 
     public void saveToFile() {
-        try {
-            File file = Main.getDataFile();
-            FileWriter fileWriter;
-            String fileName = "data.json";
-            if (Objects.nonNull(file)) {
-                fileWriter = new FileWriter(file);
+        File file = Main.getDataFile();
+        if (Objects.isNull(file)) {
+            DirectoryChooser directoryChooser = new DirectoryChooser();
+            directoryChooser.setTitle("Выберите папку для сохранения файла");
+
+            File selectedDirectory = directoryChooser.showDialog(null);
+
+            if (selectedDirectory != null) {
+                // Отображаем диалоговое окно для ввода имени файла
+                TextInputDialog dialog = new TextInputDialog("data");
+                dialog.setTitle("Имя файла");
+                dialog.setHeaderText("Введите имя файла:");
+                dialog.setContentText("Имя файла:");
+
+                Optional<String> result = dialog.showAndWait();
+                if (result.isPresent()) {
+                    String fileName = result.get();
+                    file = new File(selectedDirectory, fileName + ".json");
+                } else {
+                    Alert alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setTitle("Данные не будут сохранены");
+                    alert.setHeaderText("Имя файла не выбрано.");
+                }
             } else {
-                fileWriter = new FileWriter(fileName);
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Данные не будут сохранены");
+                alert.setHeaderText("Директория не выбрана.");
             }
+        }
+        try {
+            FileWriter fileWriter = new FileWriter(file);
             fileWriter.write(gson.toJson(new SavingFile(pointList.stream().toList(), beamList.stream().toList(),
                     lastIdPoint, isSupportOnLeft, isSupportOnRight)));
             fileWriter.close();
-            System.out.println("Сохранено в файл: " + fileName);
+            System.out.println("Сохранено в файл: " + file.getAbsolutePath());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -187,6 +225,7 @@ public class DataController {
             }
         });
     }
+
     private void setupWidthEditListener() {
         widthColumn.setOnEditCommit(event -> {
             BeamData beamData = event.getRowValue();
@@ -200,6 +239,7 @@ public class DataController {
             }
         });
     }
+
     public void checkBoxLeft() {
         isSupportOnLeft = checkBoxLeft.isSelected();
     }

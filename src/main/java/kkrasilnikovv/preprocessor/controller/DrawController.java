@@ -1,5 +1,9 @@
 package kkrasilnikovv.preprocessor.controller;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.fxml.FXML;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
@@ -13,7 +17,12 @@ import kkrasilnikovv.preprocessor.PreProcessor;
 import kkrasilnikovv.preprocessor.model.BeamData;
 import kkrasilnikovv.preprocessor.model.PointData;
 import kkrasilnikovv.preprocessor.model.SavingFile;
+import kkrasilnikovv.preprocessor.prorepty_adapter.SimpleIntegerPropertyAdapter;
+import kkrasilnikovv.preprocessor.prorepty_adapter.SimpleStringPropertyAdapter;
 
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -29,21 +38,25 @@ public class DrawController {
     private double lastMouseX;
     private double lastMouseY;
     private boolean isDragging = false;
-    private double scale = 1.0;
+    private double scale = 50.0;
     private double translateX = 0.0;
     private double translateY = 0.0;
     private boolean isSupportOnRight, isSupportOnLeft;
+    private final Gson gson = new GsonBuilder()
+            .registerTypeAdapter(SimpleIntegerProperty.class, new SimpleIntegerPropertyAdapter())
+            .registerTypeAdapter(SimpleStringProperty.class, new SimpleStringPropertyAdapter())
+            .create();
 
     public void initialize() {
         pointList = new ArrayList<>();
         beamList = new ArrayList<>();
-        loadFromFile();
         setupMouseHandlers();
         setupZoomHandler();
         draw();
     }
 
     public void draw() {
+        loadFromFile();
         GraphicsContext gc = coordinateCanvas.getGraphicsContext2D();
         double coordinateCanvasWidth = coordinateCanvas.getWidth();
         double coordinateCanvasHeight = coordinateCanvas.getHeight();
@@ -60,7 +73,8 @@ public class DrawController {
 
         gc.setStroke(Color.RED);
         // Позиция оси X после учета сдвига
-
+        double imageWidth = 30; // Фиксированная ширина изображения
+        double imageHeight = 30; // Фиксированная высота изображения
         for (BeamData beam : beamList) {
             double x1 = centerX + beam.getStartPoint() * scale;
             double x2 = centerX + beam.getEndPoint() * scale;
@@ -68,33 +82,16 @@ public class DrawController {
             double height = beam.getWidth() * scale;
             gc.strokeRect(x1, y, x2 - x1, height); // Рисуем контур прямоугольника
 
-//            // Рисуем изображение перед первым прямоугольником
-//            if (beam == beamList.get(0)) {
-//                Image image = new Image("support.png", 2, 2, true, true);
-//                double imageX = x1 - image.getWidth(); // Изображение соприкасается с левой стороной прямоугольника
-//                gc.drawImage(image, imageX, y, image.getWidth(), image.getHeight());
-//            }
-//
-//            // Рисуем изображение после последнего прямоугольника
-//            if (beam == beamList.get(beamList.size() - 1)) {
-//                Image image = new Image("support.png", 200, 200, true, true);
-//                gc.drawImage(image, x2, y, image.getWidth(), image.getHeight());
-//            }
-            if (!beamList.isEmpty()) {
-                BeamData firstBeam = beamList.get(0);
-                BeamData lastBeam = beamList.get(beamList.size() - 1);
+// Рисуем изображение перед первым прямоугольником
+            if (isSupportOnLeft && beam.equals(beamList.get(0))) {
+                Image image = new Image("support_left.PNG");
+                gc.drawImage(image, x1 - imageWidth, y + height / 2 - imageHeight / 2, imageWidth, imageHeight);
+            }
 
-                Image image = new Image("support.png");
-                double x11 = centerX + firstBeam.getStartPoint() * scale;
-                double x22 = centerX + lastBeam.getEndPoint() * scale;
-                double yy = centerY - firstBeam.getWidth() * scale / 2;
-                double heightt = firstBeam.getWidth() * scale;
-
-                // Рисуем изображение перед первым прямоугольником
-                gc.drawImage(image, x11 - image.getWidth(), yy, image.getWidth(), heightt);
-
-                // Рисуем изображение после последнего прямоугольника
-                gc.drawImage(image, x22, yy, image.getWidth(), heightt);
+            // Рисуем изображение после последнего прямоугольника
+            if (isSupportOnRight && beam.equals(beamList.get(beamList.size() - 1))) {
+                Image image = new Image("support_right.PNG");
+                gc.drawImage(image, x2 + 1, y + height / 2 - imageHeight / 2, imageWidth, imageHeight);
             }
         }
     }
@@ -103,12 +100,22 @@ public class DrawController {
         pointList.clear();
         beamList.clear();
         SavingFile savingFile = Main.getDataGSONFile();
+        if (Objects.isNull(savingFile)) {
+            try {
+                FileReader selectedFile = new FileReader("data.json");
+                BufferedReader reader = new BufferedReader(selectedFile);
+                savingFile = gson.fromJson(reader, SavingFile.class);
+            } catch (FileNotFoundException e) {
+                System.out.println("Стандартный файл data.json не найден.");
+            }
+        }
         if (Objects.nonNull(savingFile)) {
             pointList = savingFile.getPointList();
             beamList = savingFile.getBeamList();
             isSupportOnLeft = savingFile.isSupportOnLeft();
             isSupportOnRight = savingFile.isSupportOnRight();
         }
+
     }
 
     private void setupMouseHandlers() {

@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
 import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
@@ -11,8 +12,9 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.stage.FileChooser;
 import kkrasilnikovv.preprocessor.PreProcessor;
-import kkrasilnikovv.preprocessor.SimpleIntegerPropertyAdapter;
+import kkrasilnikovv.preprocessor.prorepty_adapter.SimpleIntegerPropertyAdapter;
 import kkrasilnikovv.preprocessor.model.SavingFile;
+import kkrasilnikovv.preprocessor.prorepty_adapter.SimpleStringPropertyAdapter;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -25,6 +27,7 @@ public class Controller {
     public Button processorButton, preProcessorButton, postProcessorButton, loadButton;
     private final Gson gson = new GsonBuilder()
             .registerTypeAdapter(SimpleIntegerProperty.class, new SimpleIntegerPropertyAdapter())
+            .registerTypeAdapter(SimpleStringProperty.class, new SimpleStringPropertyAdapter())
             .create();
 
     @FXML
