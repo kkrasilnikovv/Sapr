@@ -1,9 +1,9 @@
 package kkrasilnikovv.preprocessor.model;
 
 public enum SectionType {
-    TYPE_1("Треугольное"),
-    TYPE_2("Type 2"),
-    TYPE_3("Type 3");
+    TRIANGLE("Треугольное"),
+    CIRCLE("Круглое"),
+    RECTANGLE("Прямоугольное");
 
     private final String value;
 

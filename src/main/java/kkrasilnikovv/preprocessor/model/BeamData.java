@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 @AllArgsConstructor
 @Getter
@@ -17,13 +18,17 @@ public class BeamData implements Serializable {
     private final SimpleIntegerProperty endPoint;
     private final SimpleIntegerProperty width;
     private final SimpleStringProperty sectionType;
+    private final SimpleIntegerProperty strongQ;
+    private int x1;
+    private int x2;
 
-    public BeamData(int id, int startPoint, int endPoint, int width, String sectionType) {
+    public BeamData(int id, int startPoint, int endPoint, int width, String sectionType, int strongQ) {
         this.id = new SimpleIntegerProperty(id);
         this.startPoint = new SimpleIntegerProperty(startPoint);
         this.endPoint = new SimpleIntegerProperty(endPoint);
         this.width = new SimpleIntegerProperty(width);
         this.sectionType = new SimpleStringProperty(sectionType);
+        this.strongQ = new SimpleIntegerProperty(strongQ);
     }
 
     public SimpleIntegerProperty idProperty() {
@@ -50,7 +55,7 @@ public class BeamData implements Serializable {
         return width.get();
     }
 
-    public SimpleIntegerProperty width() {
+    public SimpleIntegerProperty widthProperty() {
         return width;
     }
 
@@ -58,15 +63,24 @@ public class BeamData implements Serializable {
         this.width.set(width);
     }
 
+    public SimpleStringProperty sectionTypeProperty() {
+        return sectionType;
+    }
+
     public String getSectionType() {
         return sectionType.get();
     }
 
-    public SimpleStringProperty sectionType() {
-        return sectionType;
+    public int getStrongQ() {
+        if (Objects.isNull(strongQ)) {
+            return 0;
+        } else {
+            return strongQ.get();
+        }
     }
 
-    public void setWidth(String sectionType) {
-        this.sectionType.set(sectionType);
+    public SimpleIntegerProperty strongQProperty() {
+        return strongQ;
     }
+
 }

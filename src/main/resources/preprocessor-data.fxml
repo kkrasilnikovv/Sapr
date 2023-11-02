@@ -28,6 +28,8 @@
                                     <TextFieldTableCell fx:factory="forTableColumn"/>
                                 </cellFactory>
                             </TableColumn>
+                            <TableColumn fx:id="strongFColumn" prefWidth="100" text="Сила">
+                            </TableColumn>
                         </columns>
                     </TableView>
                     <HBox spacing="10">
@@ -52,6 +54,8 @@
                             <TableColumn fx:id="widthColumn" prefWidth="100" text="Ширина">
                             </TableColumn>
                             <TableColumn fx:id="typeColumn" prefWidth="150" text="Тип">
+                            </TableColumn>
+                            <TableColumn fx:id="strongQColumn" prefWidth="100" text="Сила">
                             </TableColumn>
                         </columns>
                     </TableView>

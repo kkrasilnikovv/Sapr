@@ -23,6 +23,7 @@ import kkrasilnikovv.preprocessor.model.SectionType;
 
 import java.io.*;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -33,15 +34,12 @@ public class DataController {
     private TableView<PointData> pointTable;
 
     @FXML
-    private TableColumn<PointData, Integer> idColumn;
-
-    @FXML
-    private TableColumn<PointData, Integer> fxColumn;
+    private TableColumn<PointData, Integer> idColumn, fxColumn, strongFColumn;
 
     @FXML
     private TableView<BeamData> beamTable;
     @FXML
-    private TableColumn<BeamData, Integer> beamIdColumn, startPointColumn, endPointColumn, widthColumn;
+    private TableColumn<BeamData, Integer> beamIdColumn, startPointColumn, endPointColumn, widthColumn, strongQColumn;
     @FXML
     private TableColumn<BeamData, String> typeColumn;
     private Gson gson;
@@ -61,9 +59,12 @@ public class DataController {
         // Инициализация таблицы узлов и колонок
         idColumn.setCellValueFactory(cellData -> cellData.getValue().idProperty().asObject());
         fxColumn.setCellValueFactory(cellData -> cellData.getValue().fxProperty().asObject());
+        strongFColumn.setCellValueFactory(cellData -> cellData.getValue().StrongFProperty().asObject());
 
         idColumn.setCellFactory(TextFieldTableCell.forTableColumn(new IntegerStringConverter()));
         fxColumn.setCellFactory(TextFieldTableCell.forTableColumn(new IntegerStringConverter()));
+        strongFColumn.setCellFactory(TextFieldTableCell.forTableColumn(new IntegerStringConverter()));
+
         // Добавьте слушатель событий к столбцу fxColumn
         setupFxColumnEditListener();
         setupWidthEditListener();
@@ -74,29 +75,33 @@ public class DataController {
         beamIdColumn.setCellValueFactory(cellData -> cellData.getValue().idProperty().asObject());
         startPointColumn.setCellValueFactory(cellData -> cellData.getValue().startPointProperty().asObject());
         endPointColumn.setCellValueFactory(cellData -> cellData.getValue().endPointProperty().asObject());
-        widthColumn.setCellValueFactory(cellData -> cellData.getValue().width().asObject());
-        typeColumn.setCellValueFactory(cellData -> cellData.getValue().sectionType());
+        widthColumn.setCellValueFactory(cellData -> cellData.getValue().widthProperty().asObject());
+        typeColumn.setCellValueFactory(cellData -> cellData.getValue().sectionTypeProperty());
+        strongQColumn.setCellValueFactory(cellData -> cellData.getValue().strongQProperty().asObject());
 
         beamIdColumn.setCellFactory(TextFieldTableCell.forTableColumn(new IntegerStringConverter()));
         widthColumn.setCellFactory(TextFieldTableCell.forTableColumn(new IntegerStringConverter()));
         startPointColumn.setCellFactory(ComboBoxTableCell.forTableColumn(new IntegerStringConverter(), nodeOptions));
         endPointColumn.setCellFactory(ComboBoxTableCell.forTableColumn(new IntegerStringConverter(), nodeOptions));
         typeColumn.setCellFactory(ComboBoxTableCell.forTableColumn(sectionTypeOptions));
+        strongQColumn.setCellFactory(TextFieldTableCell.forTableColumn(new IntegerStringConverter()));
 
         // Привязываем список стержней к таблице
         beamTable.setItems(beamList);
         sectionTypeOptions.addAll(Arrays.stream(SectionType.values())
                 .map(SectionType::toString)
                 .toList());
-
-        loadFromFile(Main.getDataGSONFile());
+        File file =  Main.getDataFile();
+        if(Objects.nonNull(file)) {
+            loadFromFile(Main.convertFileToData(file));
+        }
     }
 
     @FXML
     public void addPoint() {
         // Создаем новую точку и добавляем ее в список
         lastIdPoint++; // Вычисляем новый номер точки
-        PointData newPoint = new PointData(lastIdPoint, 0);
+        PointData newPoint = new PointData(lastIdPoint, 0, 0);
         pointList.add(newPoint);
         nodeOptions.add(newPoint.getId());
     }
@@ -105,7 +110,7 @@ public class DataController {
     public void addBeam() {
         // Создаем новый стержень и добавляем его в список
         int newId = beamList.size() + 1; // Вычисляем новый номер стержня
-        BeamData newBeam = new BeamData(newId, 0, 0, 0, SectionType.TYPE_1.toString()); // Замените значения на фактические
+        BeamData newBeam = new BeamData(newId, 0, 0, 0, SectionType.TRIANGLE.toString(), 0); // Замените значения на фактические
         beamList.add(newBeam);
     }
 
@@ -179,17 +184,59 @@ public class DataController {
                 alert.setHeaderText("Директория не выбрана.");
             }
         }
-        try {
-            FileWriter fileWriter = new FileWriter(file);
-            fileWriter.write(gson.toJson(new SavingFile(pointList.stream().toList(), beamList.stream().toList(),
-                    lastIdPoint, isSupportOnLeft, isSupportOnRight)));
-            fileWriter.close();
-            System.out.println("Сохранено в файл: " + file.getAbsolutePath());
-        } catch (IOException e) {
-            e.printStackTrace();
+
+        List<BeamData> beamDataList = beamList.stream().toList();
+
+        // Проверка, что у всех объектов одинаковый тип сечения
+        boolean isOneType = beamDataList.stream()
+                .map(BeamData::getSectionType)
+                .distinct()
+                .count() == 1;
+
+        // Проверка, что у каждого объекта startPoint не равен endPoint
+        boolean isNotCyclical = beamDataList.stream()
+                .allMatch(beamData -> beamData.getStartPoint() != beamData.getEndPoint());
+
+        if (!isNotCyclical) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Данные не будут сохранены");
+            alert.setHeaderText("Стержень не может начинаться и заканчиваться в одной точке.");
+            alert.showAndWait();
+        }
+        if (!isOneType) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Данные не будут сохранены");
+            alert.setHeaderText("Стержни не могут иметь разный тип сечения.");
+            alert.showAndWait();
+        }
+        if (isNotCyclical && isOneType) {
+            List<PointData> pointDataList = pointList.stream().toList();
+            beamDataList.forEach(beam -> pointDataList.forEach(point -> {
+                if (beam.getStartPoint() == point.getId()) {
+                    beam.setX1(point.getFx());
+                }
+                if (beam.getEndPoint() == point.getId()) {
+                    beam.setX2(point.getFx());
+                }
+            }));
+            writeToFile(file, pointDataList, beamDataList);
         }
     }
 
+    private void writeToFile(File file, List<PointData> pointDataList, List<BeamData> beamDataList) {
+        try {
+            FileWriter fileWriter = new FileWriter(file);
+            fileWriter.write(gson.toJson(new SavingFile(pointDataList, beamDataList,
+                    lastIdPoint, isSupportOnLeft, isSupportOnRight)));
+            fileWriter.close();
+            Main.setDataFile(file);
+            System.out.println("Сохранено в файл: " + file.getAbsolutePath());
+        } catch (IOException e) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Данные не будут сохранены");
+            alert.setHeaderText("Невозможно сохранить в файл:" + file.getName());
+        }
+    }
 
     public void loadFromFile(SavingFile savingFile) {
         pointList.clear();
