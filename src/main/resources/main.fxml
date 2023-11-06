@@ -11,6 +11,4 @@
     <Button fx:id="processorButton" text="Процессор" onMouseClicked="#processorEvent" minHeight="50" minWidth="200" id="processor"/>
     <Button fx:id="postProcessorButton" text="Постпроцессор" onMouseClicked="#postProcessorEvent" minHeight="50" minWidth="200"
             id="postprocessor"/>
-    <Button fx:id="loadButton" text="Загрузить данные из файла" onAction="#loadEvent" minHeight="50" minWidth="200"
-            id="processor"/>
 </VBox>

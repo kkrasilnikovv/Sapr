@@ -3,18 +3,25 @@ package kkrasilnikovv.preprocessor.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
 @AllArgsConstructor
-@NoArgsConstructor
 @Getter
-public class SavingFile {
+public class DataFile {
     private List<PointData> pointList;
     private List<BeamData> beamList;
     private int lastIdPoint;
     private boolean supportOnLeft;
     private boolean supportOnRight;
+
+    public DataFile() {
+        pointList = new ArrayList<>();
+        beamList = new ArrayList<>();
+        lastIdPoint = 0;
+        supportOnLeft = false;
+        supportOnRight = false;
+    }
 }

@@ -11,7 +11,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.stage.Stage;
-import kkrasilnikovv.preprocessor.model.SavingFile;
+import kkrasilnikovv.preprocessor.model.DataFile;
 import kkrasilnikovv.preprocessor.prorepty_adapter.SimpleIntegerPropertyAdapter;
 import kkrasilnikovv.preprocessor.prorepty_adapter.SimpleStringPropertyAdapter;
 import lombok.Getter;
@@ -53,13 +53,15 @@ public class Main extends Application {
         showsScene.setScene(mainScene);
     }
 
-    public static SavingFile convertFileToData(File file) {
-        SavingFile savingFile = new SavingFile();
+    public static DataFile convertFileToData(File file, boolean isMainFile) {
+        DataFile dataFile = new DataFile();
         if (Objects.nonNull(file)) {
             try {
                 BufferedReader reader = new BufferedReader(new FileReader(file));
-                savingFile = gson.fromJson(reader, SavingFile.class);
-                Main.setDataFile(file);
+                dataFile = gson.fromJson(reader, DataFile.class);
+                if (isMainFile) {
+                    Main.setDataFile(file);
+                }
             } catch (FileNotFoundException e) {
                 showAlert("Ошибка", "Файл не найден.", Alert.AlertType.ERROR);
             } catch (JsonSyntaxException ex) {
@@ -68,7 +70,7 @@ public class Main extends Application {
         } else {
             showAlert("Информация", "Файл не найден.", Alert.AlertType.INFORMATION);
         }
-        return savingFile;
+        return dataFile;
     }
 
     private static void showAlert(String title, String content, Alert.AlertType type) {

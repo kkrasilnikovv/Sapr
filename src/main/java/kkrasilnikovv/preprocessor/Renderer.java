@@ -1,27 +1,22 @@
-package kkrasilnikovv.preprocessor.controller;
+package kkrasilnikovv.preprocessor;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import javafx.beans.property.SimpleIntegerProperty;
-import javafx.beans.property.SimpleStringProperty;
 import javafx.embed.swing.SwingFXUtils;
-import javafx.fxml.FXML;
+import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.control.Button;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.WritableImage;
 
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.stage.Stage;
 import kkrasilnikovv.main.Main;
-import kkrasilnikovv.preprocessor.PreProcessor;
 import kkrasilnikovv.preprocessor.model.BeamData;
 import kkrasilnikovv.preprocessor.model.PointData;
-import kkrasilnikovv.preprocessor.model.SavingFile;
+import kkrasilnikovv.preprocessor.model.DataFile;
 import kkrasilnikovv.preprocessor.model.SectionType;
-import kkrasilnikovv.preprocessor.prorepty_adapter.SimpleIntegerPropertyAdapter;
-import kkrasilnikovv.preprocessor.prorepty_adapter.SimpleStringPropertyAdapter;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -30,69 +25,21 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class DrawController {
-    @FXML
-    private ImageView imagePreview;
-    @FXML
+public class Renderer {
+    private double orgSceneX, orgSceneY,orgTranslateX, orgTranslateY;
     public Canvas coordinateCanvas;
-    @FXML
-    public Button backButton;
-
     private List<PointData> pointList;
     private List<BeamData> beamList;
     private boolean isSupportOnRight, isSupportOnLeft;
-    private final Gson gson = new GsonBuilder()
-            .registerTypeAdapter(SimpleIntegerProperty.class, new SimpleIntegerPropertyAdapter())
-            .registerTypeAdapter(SimpleStringProperty.class, new SimpleStringPropertyAdapter())
-            .create();
-    private double initialX = 0.0;
-    private double initialY = 0.0;
 
-    public void initialize() {
+    public Renderer() {
         pointList = new ArrayList<>();
         beamList = new ArrayList<>();
-        draw();
-        saveCanvasAsImage();
-        showImagePreview();
-        imagePreview.setOnScroll(event -> {
-            double deltaY = event.getDeltaY();
-            double zoomFactor = 1.1; // Фактор масштабирования
-
-            if (deltaY < 0) {
-                // Уменьшение изображения
-                imagePreview.setScaleX(imagePreview.getScaleX() / zoomFactor);
-                imagePreview.setScaleY(imagePreview.getScaleY() / zoomFactor);
-            } else {
-                // Увеличение изображения
-                imagePreview.setScaleX(imagePreview.getScaleX() * zoomFactor);
-                imagePreview.setScaleY(imagePreview.getScaleY() * zoomFactor);
-            }
-
-            event.consume();
-        });
-        imagePreview.setOnMousePressed(event -> {
-            if (event.isPrimaryButtonDown()) {
-                initialX = event.getSceneX();
-                initialY = event.getSceneY();
-            }
-        });
-
-        imagePreview.setOnMouseDragged(event -> {
-            if (event.isPrimaryButtonDown()) {
-                double offsetX = event.getSceneX() - initialX;
-                double offsetY = event.getSceneY() - initialY;
-
-                imagePreview.setTranslateX(imagePreview.getTranslateX() + offsetX);
-                imagePreview.setTranslateY(imagePreview.getTranslateY() + offsetY);
-
-                initialX = event.getSceneX();
-                initialY = event.getSceneY();
-            }
-        });
     }
 
     public void draw() {
         loadFromFile();
+        coordinateCanvas = new Canvas(1920,1080);
         GraphicsContext gc = coordinateCanvas.getGraphicsContext2D();
         double coordinateCanvasWidth = coordinateCanvas.getWidth();
         double coordinateCanvasHeight = coordinateCanvas.getHeight();
@@ -154,6 +101,8 @@ public class DrawController {
                 drawStrongF(gc, new Image("/left_strong_F.PNG"), centerX + point.getFx() * scale, centerY, strong);
             }
         }
+
+        //Рисуем тип сечения
         if (Objects.nonNull(beamList) && !beamList.isEmpty()) {
             String type = beamList.get(0).getSectionType();
             Image image = null;
@@ -169,7 +118,7 @@ public class DrawController {
             double imageTypeWidth = 150; // Фиксированная ширина изображения
             double imageTypeHeight = 150; // Фиксированная высота изображения
             gc.drawImage(image, x, y, imageTypeWidth, imageTypeHeight);
-            gc.fillText("Тип сечения", x+imageTypeWidth/2/2, y-5);
+            gc.fillText("Тип сечения", x + imageTypeWidth / 2 / 2, y - 5);
         }
         saveCanvasAsImage();
         showImagePreview();
@@ -219,17 +168,17 @@ public class DrawController {
     private void loadFromFile() {
         pointList.clear();
         beamList.clear();
-        SavingFile savingFile = null;
+        DataFile dataFile = null;
         File file = Main.getDataFile();
         if (Objects.nonNull(file)) {
-            savingFile = Main.convertFileToData(file);
+            dataFile = Main.convertFileToData(file,false);
         }
 
-        if (Objects.nonNull(savingFile)) {
-            pointList = savingFile.getPointList();
-            beamList = savingFile.getBeamList();
-            isSupportOnLeft = savingFile.isSupportOnLeft();
-            isSupportOnRight = savingFile.isSupportOnRight();
+        if (Objects.nonNull(dataFile)) {
+            pointList = dataFile.getPointList();
+            beamList = dataFile.getBeamList();
+            isSupportOnLeft = dataFile.isSupportOnLeft();
+            isSupportOnRight = dataFile.isSupportOnRight();
         }
 
     }
@@ -238,14 +187,47 @@ public class DrawController {
         try {
             File file = new File("image.png");
             Image image = new Image(file.toURI().toString());
-            imagePreview.setImage(image);
+            Stage stage = new Stage();
+            // Создаем элемент ImageView и устанавливаем в него изображение
+            ImageView imageView = new ImageView(image);
+
+
+            imageView.setOnMousePressed((MouseEvent event) -> {
+                orgSceneX = event.getSceneX();
+                orgSceneY = event.getSceneY();
+                orgTranslateX = imageView.getTranslateX();
+                orgTranslateY = imageView.getTranslateY();
+            });
+
+            imageView.setOnMouseDragged((MouseEvent event) -> {
+                double offsetX = event.getSceneX() - orgSceneX;
+                double offsetY = event.getSceneY() - orgSceneY;
+                double newTranslateX = orgTranslateX + offsetX;
+                double newTranslateY = orgTranslateY + offsetY;
+
+                imageView.setTranslateX(newTranslateX);
+                imageView.setTranslateY(newTranslateY);
+            });
+
+            imageView.setOnScroll(event -> {
+                double deltaY = event.getDeltaY();
+                double scale = imageView.getScaleX();
+                if (deltaY > 0) {
+                    scale *= 1.1; // Увеличить масштаб при вращении колесика вперед
+                } else {
+                    scale *= 0.9; // Уменьшить масштаб при вращении колесика назад
+                }
+                imageView.setScaleX(scale);
+                imageView.setScaleY(scale);
+            });
+
+            VBox vbox = new VBox(imageView);
+            Scene scene = new Scene(vbox, 800, 600);
+            stage.setScene(scene);
+            stage.setTitle("Image Preview");
+            stage.show();
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-
-    public void backup() {
-        Main.showScene(PreProcessor.getInstance().getMainScene());
     }
 }

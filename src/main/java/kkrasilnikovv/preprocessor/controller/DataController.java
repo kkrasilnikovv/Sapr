@@ -6,11 +6,14 @@ import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.ComboBoxTableCell;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.stage.DirectoryChooser;
+import javafx.stage.FileChooser;
 import javafx.util.converter.IntegerStringConverter;
 import kkrasilnikovv.main.Main;
 import kkrasilnikovv.preprocessor.PreProcessor;
@@ -18,7 +21,7 @@ import kkrasilnikovv.preprocessor.prorepty_adapter.SimpleIntegerPropertyAdapter;
 import kkrasilnikovv.preprocessor.prorepty_adapter.SimpleStringPropertyAdapter;
 import kkrasilnikovv.preprocessor.model.BeamData;
 import kkrasilnikovv.preprocessor.model.PointData;
-import kkrasilnikovv.preprocessor.model.SavingFile;
+import kkrasilnikovv.preprocessor.model.DataFile;
 import kkrasilnikovv.preprocessor.model.SectionType;
 
 import java.io.*;
@@ -32,7 +35,6 @@ public class DataController {
     public CheckBox checkBoxLeft, checkBoxRight;
     @FXML
     private TableView<PointData> pointTable;
-
     @FXML
     private TableColumn<PointData, Integer> idColumn, fxColumn, strongFColumn;
 
@@ -91,10 +93,6 @@ public class DataController {
         sectionTypeOptions.addAll(Arrays.stream(SectionType.values())
                 .map(SectionType::toString)
                 .toList());
-        File file =  Main.getDataFile();
-        if(Objects.nonNull(file)) {
-            loadFromFile(Main.convertFileToData(file));
-        }
     }
 
     @FXML
@@ -177,16 +175,18 @@ public class DataController {
                     Alert alert = new Alert(Alert.AlertType.ERROR);
                     alert.setTitle("Данные не будут сохранены");
                     alert.setHeaderText("Имя файла не выбрано.");
+                    alert.showAndWait();
                 }
             } else {
                 Alert alert = new Alert(Alert.AlertType.ERROR);
                 alert.setTitle("Данные не будут сохранены");
                 alert.setHeaderText("Директория не выбрана.");
+                alert.showAndWait();
             }
         }
 
         List<BeamData> beamDataList = beamList.stream().toList();
-
+        boolean isEmpty = beamDataList.isEmpty() && pointList.isEmpty() && !isSupportOnLeft && !isSupportOnRight;
         // Проверка, что у всех объектов одинаковый тип сечения
         boolean isOneType = beamDataList.stream()
                 .map(BeamData::getSectionType)
@@ -209,7 +209,7 @@ public class DataController {
             alert.setHeaderText("Стержни не могут иметь разный тип сечения.");
             alert.showAndWait();
         }
-        if (isNotCyclical && isOneType) {
+        if ((isNotCyclical && isOneType) || isEmpty) {
             List<PointData> pointDataList = pointList.stream().toList();
             beamDataList.forEach(beam -> pointDataList.forEach(point -> {
                 if (beam.getStartPoint() == point.getId()) {
@@ -224,33 +224,45 @@ public class DataController {
     }
 
     private void writeToFile(File file, List<PointData> pointDataList, List<BeamData> beamDataList) {
-        try {
-            FileWriter fileWriter = new FileWriter(file);
-            fileWriter.write(gson.toJson(new SavingFile(pointDataList, beamDataList,
+        Alert alert;
+        try (FileWriter fileWriter = new FileWriter(file)) {
+            fileWriter.write(gson.toJson(new DataFile(pointDataList, beamDataList,
                     lastIdPoint, isSupportOnLeft, isSupportOnRight)));
-            fileWriter.close();
             Main.setDataFile(file);
-            System.out.println("Сохранено в файл: " + file.getAbsolutePath());
+            alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Данные успешно сохранены");
+            alert.setHeaderText("Сохранено в файл: " + file.getAbsolutePath());
+            alert.showAndWait();
         } catch (IOException e) {
-            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Данные не будут сохранены");
             alert.setHeaderText("Невозможно сохранить в файл:" + file.getName());
+            alert.showAndWait();
         }
     }
 
-    public void loadFromFile(SavingFile savingFile) {
+    public void loadEvent(ActionEvent actionEvent) {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("JSON Files", "*data.json"));
+        // Открываем диалоговое окно выбора файла
+        File selectedFile = fileChooser.showOpenDialog(((Node) actionEvent.getTarget()).getScene().getWindow());
+        Main.setDataFile(selectedFile);
+        loadFromFile(Main.convertFileToData(Main.getDataFile(), true));
+    }
+
+    private void loadFromFile(DataFile dataFile) {
         pointList.clear();
         beamList.clear();
         nodeOptions.clear();
-        if (Objects.nonNull(savingFile)) {
-            pointList.addAll(savingFile.getPointList());
-            beamList.addAll(savingFile.getBeamList());
-            lastIdPoint = savingFile.getLastIdPoint();
+        if (Objects.nonNull(dataFile)) {
+            pointList.addAll(dataFile.getPointList());
+            beamList.addAll(dataFile.getBeamList());
+            lastIdPoint = dataFile.getLastIdPoint();
             for (PointData pointData : pointList) {
                 nodeOptions.add(pointData.getId());
             }
-            isSupportOnRight = savingFile.isSupportOnRight();
-            isSupportOnLeft = savingFile.isSupportOnLeft();
+            isSupportOnRight = dataFile.isSupportOnRight();
+            isSupportOnLeft = dataFile.isSupportOnLeft();
             checkBoxRight.setSelected(isSupportOnRight);
             checkBoxLeft.setSelected(isSupportOnLeft);
         }

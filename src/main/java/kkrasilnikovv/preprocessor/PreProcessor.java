@@ -13,8 +13,6 @@ import java.util.Objects;
 public class PreProcessor {
     private final Scene mainScene;
     private final Scene dataScene;
-    private final Scene drawScene;
-    private final Scene drawHelloScene;
     @Getter(AccessLevel.NONE)
     private static PreProcessor preProcessor;
 
@@ -24,10 +22,6 @@ public class PreProcessor {
         mainScene = new Scene(main, 800, 600);
         Parent data = FXMLLoader.load(ClassLoader.getSystemResource("preprocessor-data.fxml"));
         dataScene = new Scene(data, 800, 600);
-        Parent draw = FXMLLoader.load(ClassLoader.getSystemResource("preprocessor-draw.fxml"));
-        drawScene = new Scene(draw, 800, 600);
-        Parent drawHello = FXMLLoader.load(ClassLoader.getSystemResource("preprocessor-draw-hello.fxml"));
-        drawHelloScene = new Scene(drawHello, 800, 600);
     }
 
     public static PreProcessor getInstance() {
