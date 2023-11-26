@@ -1,15 +1,16 @@
 package kkrasilnikovv.preprocessor.model;
 
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 
-public class PointData {
+public class Point {
     private final SimpleIntegerProperty id;
-    private final SimpleIntegerProperty fx;
+    private final SimpleDoubleProperty fx;
     private final SimpleIntegerProperty strongF;
 
-    public PointData(int id, int fx, int strongF) {
+    public Point(int id, double fx, int strongF) {
         this.id = new SimpleIntegerProperty(id);
-        this.fx = new SimpleIntegerProperty(fx);
+        this.fx = new SimpleDoubleProperty(fx);
         this.strongF = new SimpleIntegerProperty(strongF);
     }
 
@@ -17,21 +18,23 @@ public class PointData {
         return id.get();
     }
 
-    public int getFx() {
+    public double getFx() {
         return fx.get();
     }
-    public int getStrong(){
+
+    public int getStrong() {
         return strongF.get();
     }
+
     public SimpleIntegerProperty idProperty() {
         return id;
     }
 
-    public SimpleIntegerProperty fxProperty() {
+    public SimpleDoubleProperty fxProperty() {
         return fx;
     }
 
-    public void setFx(int fx) {
+    public void setFx(double fx) {
         this.fx.set(fx);
     }
 

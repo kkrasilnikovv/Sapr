@@ -4,7 +4,7 @@
 <?import javafx.scene.layout.VBox?>
 <VBox alignment="CENTER" spacing="20.0" xmlns:fx="http://javafx.com/fxml"
       fx:controller="kkrasilnikovv.preprocessor.controller.Controller" prefHeight="400" prefWidth="400">
-    <Label text="Предпроцессор" style="-fx-font-size: 20"/>
+    <Label text="Препроцессор" style="-fx-font-size: 20"/>
     <Button fx:id="dataButton" text="Добавить/изменить данные" onMouseClicked="#dataEvent" minHeight="50" minWidth="200"
             id="preprocessor"/>
     <Button fx:id="drawButton" text="Отрисовать конструкцию" onAction="#drawEvent" minHeight="50" minWidth="200"

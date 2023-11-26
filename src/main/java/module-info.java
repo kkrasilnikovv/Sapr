@@ -10,9 +10,11 @@ module kkrasilnikovv {
     opens kkrasilnikovv.preprocessor.model;
     opens kkrasilnikovv.preprocessor.prorepty_adapter;
     opens kkrasilnikovv.processor;
+    opens kkrasilnikovv.postprocessor;
     exports kkrasilnikovv.preprocessor.prorepty_adapter;
     exports kkrasilnikovv.main;
     exports kkrasilnikovv.preprocessor;
     exports kkrasilnikovv.preprocessor.model;
     exports kkrasilnikovv.processor;
+    exports kkrasilnikovv.postprocessor;
 }

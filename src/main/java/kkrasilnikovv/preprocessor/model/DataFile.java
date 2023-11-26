@@ -11,8 +11,8 @@ import java.util.List;
 @AllArgsConstructor
 @Getter
 public class DataFile {
-    private List<PointData> pointList;
-    private List<BeamData> beamList;
+    private List<Point> pointList;
+    private List<Beam> beamList;
     private int lastIdPoint;
     private boolean supportOnLeft;
     private boolean supportOnRight;
@@ -23,5 +23,8 @@ public class DataFile {
         lastIdPoint = 0;
         supportOnLeft = false;
         supportOnRight = false;
+    }
+    public boolean isEmpty(){
+        return pointList.isEmpty()&&beamList.isEmpty();
     }
 }

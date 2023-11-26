@@ -2,6 +2,7 @@ package kkrasilnikovv.preprocessor.controller;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -14,18 +15,18 @@ import javafx.scene.control.cell.ComboBoxTableCell;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
+import javafx.util.converter.DoubleStringConverter;
 import javafx.util.converter.IntegerStringConverter;
 import kkrasilnikovv.main.Main;
 import kkrasilnikovv.preprocessor.PreProcessor;
+import kkrasilnikovv.preprocessor.prorepty_adapter.SimpleDoublePropertyAdapter;
 import kkrasilnikovv.preprocessor.prorepty_adapter.SimpleIntegerPropertyAdapter;
 import kkrasilnikovv.preprocessor.prorepty_adapter.SimpleStringPropertyAdapter;
-import kkrasilnikovv.preprocessor.model.BeamData;
-import kkrasilnikovv.preprocessor.model.PointData;
+import kkrasilnikovv.preprocessor.model.Beam;
+import kkrasilnikovv.preprocessor.model.Point;
 import kkrasilnikovv.preprocessor.model.DataFile;
-import kkrasilnikovv.preprocessor.model.SectionType;
 
 import java.io.*;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -34,29 +35,30 @@ public class DataController {
     public TabPane tabPane;
     public CheckBox checkBoxLeft, checkBoxRight;
     @FXML
-    private TableView<PointData> pointTable;
+    private TableView<Point> pointTable;
     @FXML
-    private TableColumn<PointData, Integer> idColumn, fxColumn, strongFColumn;
-
+    private TableColumn<Point, Integer> idColumn, strongFColumn;
     @FXML
-    private TableView<BeamData> beamTable;
+    private TableColumn<Point, Double> fxColumn;
     @FXML
-    private TableColumn<BeamData, Integer> beamIdColumn, startPointColumn, endPointColumn, widthColumn, strongQColumn;
+    private TableView<Beam> beamTable;
     @FXML
-    private TableColumn<BeamData, String> typeColumn;
+    private TableColumn<Beam, Integer> beamIdColumn, startPointColumn, endPointColumn, strongQColumn;
+    @FXML
+    private TableColumn<Beam, Double> squareColumn, elasticityColumn, tensionColumn;
     private Gson gson;
     private int lastIdPoint = 0;
-    private final ObservableList<PointData> pointList = FXCollections.observableArrayList();
-    private final ObservableList<BeamData> beamList = FXCollections.observableArrayList();
+    private final ObservableList<Point> pointList = FXCollections.observableArrayList();
+    private final ObservableList<Beam> beamList = FXCollections.observableArrayList();
     private final ObservableList<Integer> nodeOptions = FXCollections.observableArrayList();
     private boolean isSupportOnRight, isSupportOnLeft;
-    private final ObservableList<String> sectionTypeOptions = FXCollections.observableArrayList();
 
 
     public void initialize() {
         gson = new GsonBuilder()
                 .registerTypeAdapter(SimpleIntegerProperty.class, new SimpleIntegerPropertyAdapter())
                 .registerTypeAdapter(SimpleStringProperty.class, new SimpleStringPropertyAdapter())
+                .registerTypeAdapter(SimpleDoubleProperty.class, new SimpleDoublePropertyAdapter())
                 .create();
         // Инициализация таблицы узлов и колонок
         idColumn.setCellValueFactory(cellData -> cellData.getValue().idProperty().asObject());
@@ -64,12 +66,14 @@ public class DataController {
         strongFColumn.setCellValueFactory(cellData -> cellData.getValue().StrongFProperty().asObject());
 
         idColumn.setCellFactory(TextFieldTableCell.forTableColumn(new IntegerStringConverter()));
-        fxColumn.setCellFactory(TextFieldTableCell.forTableColumn(new IntegerStringConverter()));
+        fxColumn.setCellFactory(TextFieldTableCell.forTableColumn(new DoubleStringConverter()));
         strongFColumn.setCellFactory(TextFieldTableCell.forTableColumn(new IntegerStringConverter()));
 
-        // Добавьте слушатель событий к столбцу fxColumn
+        // Добавьте слушатель событий
         setupFxColumnEditListener();
-        setupWidthEditListener();
+        setupElasticityEditListener();
+        setupTensionEditListener();
+        setupSquareEditListener();
         // Привязываем список точек к таблице
         pointTable.setItems(pointList);
 
@@ -77,29 +81,27 @@ public class DataController {
         beamIdColumn.setCellValueFactory(cellData -> cellData.getValue().idProperty().asObject());
         startPointColumn.setCellValueFactory(cellData -> cellData.getValue().startPointProperty().asObject());
         endPointColumn.setCellValueFactory(cellData -> cellData.getValue().endPointProperty().asObject());
-        widthColumn.setCellValueFactory(cellData -> cellData.getValue().widthProperty().asObject());
-        typeColumn.setCellValueFactory(cellData -> cellData.getValue().sectionTypeProperty());
+        squareColumn.setCellValueFactory(cellData -> cellData.getValue().squareProperty().asObject());
         strongQColumn.setCellValueFactory(cellData -> cellData.getValue().strongQProperty().asObject());
+        elasticityColumn.setCellValueFactory(cellData -> cellData.getValue().elasticityProperty().asObject());
+        tensionColumn.setCellValueFactory(cellData -> cellData.getValue().tensionProperty().asObject());
 
         beamIdColumn.setCellFactory(TextFieldTableCell.forTableColumn(new IntegerStringConverter()));
-        widthColumn.setCellFactory(TextFieldTableCell.forTableColumn(new IntegerStringConverter()));
+        squareColumn.setCellFactory(TextFieldTableCell.forTableColumn(new DoubleStringConverter()));
         startPointColumn.setCellFactory(ComboBoxTableCell.forTableColumn(new IntegerStringConverter(), nodeOptions));
         endPointColumn.setCellFactory(ComboBoxTableCell.forTableColumn(new IntegerStringConverter(), nodeOptions));
-        typeColumn.setCellFactory(ComboBoxTableCell.forTableColumn(sectionTypeOptions));
         strongQColumn.setCellFactory(TextFieldTableCell.forTableColumn(new IntegerStringConverter()));
-
+        elasticityColumn.setCellFactory(TextFieldTableCell.forTableColumn(new DoubleStringConverter()));
+        tensionColumn.setCellFactory(TextFieldTableCell.forTableColumn(new DoubleStringConverter()));
         // Привязываем список стержней к таблице
         beamTable.setItems(beamList);
-        sectionTypeOptions.addAll(Arrays.stream(SectionType.values())
-                .map(SectionType::toString)
-                .toList());
     }
 
     @FXML
     public void addPoint() {
         // Создаем новую точку и добавляем ее в список
         lastIdPoint++; // Вычисляем новый номер точки
-        PointData newPoint = new PointData(lastIdPoint, 0, 0);
+        Point newPoint = new Point(lastIdPoint, 0, 0);
         pointList.add(newPoint);
         nodeOptions.add(newPoint.getId());
     }
@@ -108,7 +110,7 @@ public class DataController {
     public void addBeam() {
         // Создаем новый стержень и добавляем его в список
         int newId = beamList.size() + 1; // Вычисляем новый номер стержня
-        BeamData newBeam = new BeamData(newId, 0, 0, 0, SectionType.TRIANGLE.toString(), 0); // Замените значения на фактические
+        Beam newBeam = new Beam(newId, 1, 1, 1, 0, 1, 1); // Замените значения на фактические
         beamList.add(newBeam);
     }
 
@@ -118,6 +120,7 @@ public class DataController {
             int selectedIndex = pointTable.getSelectionModel().getSelectedIndex();
             pointTable.getItems().remove(selectedIndex);
             nodeOptions.remove(selectedIndex);
+            lastIdPoint = pointTable.getItems().stream().mapToInt(Point::getId).max().orElse(0);
         }
     }
 
@@ -144,15 +147,19 @@ public class DataController {
 
         if (result.isPresent() && result.get() == saveButton) {
             // Пользователь выбрал "Да", сохраняем файл
-            saveToFile();
-            Main.showScene(PreProcessor.getInstance().getMainScene());
+            try {
+                saveToFile();
+                Main.showScene(PreProcessor.getInstance().getMainScene());
+            } catch (Exception e) {
+
+            }
         } else if (result.isPresent() && result.get() == discardButton) {
             // Пользователь выбрал "Нет", просто возвращаемся назад без сохранения
             Main.showScene(PreProcessor.getInstance().getMainScene());
         }
     }
 
-    public void saveToFile() {
+    public void saveToFile() throws Exception {
         File file = Main.getDataFile();
         if (Objects.isNull(file)) {
             DirectoryChooser directoryChooser = new DirectoryChooser();
@@ -172,61 +179,75 @@ public class DataController {
                     String fileName = result.get();
                     file = new File(selectedDirectory, fileName + ".json");
                 } else {
-                    Alert alert = new Alert(Alert.AlertType.ERROR);
-                    alert.setTitle("Данные не будут сохранены");
-                    alert.setHeaderText("Имя файла не выбрано.");
-                    alert.showAndWait();
+                    buildErrorAlert("Имя файла не выбрано.");
                 }
             } else {
-                Alert alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle("Данные не будут сохранены");
-                alert.setHeaderText("Директория не выбрана.");
-                alert.showAndWait();
+                buildErrorAlert("Директория не выбрана.");
             }
         }
 
-        List<BeamData> beamDataList = beamList.stream().toList();
-        boolean isEmpty = beamDataList.isEmpty() && pointList.isEmpty() && !isSupportOnLeft && !isSupportOnRight;
-        // Проверка, что у всех объектов одинаковый тип сечения
-        boolean isOneType = beamDataList.stream()
-                .map(BeamData::getSectionType)
-                .distinct()
-                .count() == 1;
-
+        List<Beam> beams = this.beamList.stream().toList();
+        List<Point> points = this.pointList.stream().toList();
+        boolean isNotEmptySupports = isSupportOnLeft || isSupportOnRight;
         // Проверка, что у каждого объекта startPoint не равен endPoint
-        boolean isNotCyclical = beamDataList.stream()
-                .allMatch(beamData -> beamData.getStartPoint() != beamData.getEndPoint());
-
+        boolean isNotCyclical = beams
+                .stream()
+                .allMatch(beam -> beam.getStartPoint() != beam.getEndPoint());
+        boolean isContainsPoint = true;
+        for (Beam beam : beams) {
+            if (containsId(points, beam.getStartPoint())) {
+                isContainsPoint = false;
+            }
+            if (containsId(points, beam.getEndPoint())) {
+                isContainsPoint = false;
+            }
+        }
+        if (points.size() < 2) {
+            buildErrorAlert("Конструкция не может содержать менее 2 точек.");
+        }
+        if (points.size() - 1 != beams.size()) {
+            buildErrorAlert("Не выполняется правило \"Кол-во точек должно быть больше на 1,чем кол-во стержней.\"");
+        }
         if (!isNotCyclical) {
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Данные не будут сохранены");
-            alert.setHeaderText("Стержень не может начинаться и заканчиваться в одной точке.");
-            alert.showAndWait();
+            buildErrorAlert("Стержень не может начинаться и заканчиваться в одной точке.");
         }
-        if (!isOneType) {
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Данные не будут сохранены");
-            alert.setHeaderText("Стержни не могут иметь разный тип сечения.");
-            alert.showAndWait();
+        if (!isContainsPoint) {
+            buildErrorAlert("Стержень начинается или заканчивается в несуществующей точке.");
         }
-        if ((isNotCyclical && isOneType) || isEmpty) {
-            List<PointData> pointDataList = pointList.stream().toList();
-            beamDataList.forEach(beam -> pointDataList.forEach(point -> {
-                if (beam.getStartPoint() == point.getId()) {
-                    beam.setX1(point.getFx());
-                }
-                if (beam.getEndPoint() == point.getId()) {
-                    beam.setX2(point.getFx());
-                }
-            }));
-            writeToFile(file, pointDataList, beamDataList);
+        if (!isNotEmptySupports) {
+            buildErrorAlert("Конструкция не может существовать хотя бы без 1 поддержки.");
         }
+        beams.forEach(beam -> points.forEach(point -> {
+            if (beam.getStartPoint() == point.getId()) {
+                beam.setX1(point.getFx());
+            }
+            if (beam.getEndPoint() == point.getId()) {
+                beam.setX2(point.getFx());
+            }
+            beam.setLength();
+        }));
+
+        for (Beam beam : beams) {
+            if (beam.getX2() - beam.getX1() <= 0) {
+                buildErrorAlert("Стержень №" + beam.getId().get() + "имеет длину менее или равной 0.");
+            }
+        }
+        writeToFile(file, points, beams);
     }
 
-    private void writeToFile(File file, List<PointData> pointDataList, List<BeamData> beamDataList) {
+    private boolean containsId(List<Point> points, Integer id) {
+        for (Point point : points) {
+            if (point.getId() == id) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private void writeToFile(File file, List<Point> pointList, List<Beam> beamList) {
         Alert alert;
         try (FileWriter fileWriter = new FileWriter(file)) {
-            fileWriter.write(gson.toJson(new DataFile(pointDataList, beamDataList,
+            fileWriter.write(gson.toJson(new DataFile(pointList, beamList,
                     lastIdPoint, isSupportOnLeft, isSupportOnRight)));
             Main.setDataFile(file);
             alert = new Alert(Alert.AlertType.INFORMATION);
@@ -238,6 +259,7 @@ public class DataController {
             alert.setTitle("Данные не будут сохранены");
             alert.setHeaderText("Невозможно сохранить в файл:" + file.getName());
             alert.showAndWait();
+            loadFromFile(Main.convertFileToData(Main.getDataFile(), true));
         }
     }
 
@@ -258,8 +280,8 @@ public class DataController {
             pointList.addAll(dataFile.getPointList());
             beamList.addAll(dataFile.getBeamList());
             lastIdPoint = dataFile.getLastIdPoint();
-            for (PointData pointData : pointList) {
-                nodeOptions.add(pointData.getId());
+            for (Point point : pointList) {
+                nodeOptions.add(point.getId());
             }
             isSupportOnRight = dataFile.isSupportOnRight();
             isSupportOnLeft = dataFile.isSupportOnLeft();
@@ -272,8 +294,8 @@ public class DataController {
 
     private void setupFxColumnEditListener() {
         fxColumn.setOnEditCommit(event -> {
-            PointData editedPoint = event.getRowValue();
-            Integer newValue = event.getNewValue();
+            Point editedPoint = event.getRowValue();
+            Double newValue = event.getNewValue();
 
             if (newValue != null && newValue >= 0) {
                 // Примените новое значение, если оно прошло проверку
@@ -285,18 +307,54 @@ public class DataController {
         });
     }
 
-    private void setupWidthEditListener() {
-        widthColumn.setOnEditCommit(event -> {
-            BeamData beamData = event.getRowValue();
-            Integer newValue = event.getNewValue();
+    private void setupElasticityEditListener() {
+        elasticityColumn.setOnEditCommit(event -> {
+            Beam beam = event.getRowValue();
+            Double newValue = event.getNewValue();
             if (newValue != null && newValue >= 1) {
                 // Примените новое значение, если оно прошло проверку
-                beamData.setWidth(newValue);
+                beam.setElasticity(newValue);
             } else {
                 // Отклоните изменение и восстановите предыдущее значение, если новое значение не прошло проверку
-                widthColumn.getTableView().getItems().set(event.getTablePosition().getRow(), beamData);
+                elasticityColumn.getTableView().getItems().set(event.getTablePosition().getRow(), beam);
             }
         });
+    }
+
+    private void setupSquareEditListener() {
+        squareColumn.setOnEditCommit(event -> {
+            Beam beam = event.getRowValue();
+            Double newValue = event.getNewValue();
+            if (newValue != null && newValue >= 1) {
+                // Примените новое значение, если оно прошло проверку
+                beam.setSquare(newValue);
+            } else {
+                // Отклоните изменение и восстановите предыдущее значение, если новое значение не прошло проверку
+                squareColumn.getTableView().getItems().set(event.getTablePosition().getRow(), beam);
+            }
+        });
+    }
+
+    private void setupTensionEditListener() {
+        tensionColumn.setOnEditCommit(event -> {
+            Beam beam = event.getRowValue();
+            Double newValue = event.getNewValue();
+            if (newValue != null && newValue >= 1) {
+                // Примените новое значение, если оно прошло проверку
+                beam.setTension(newValue);
+            } else {
+                // Отклоните изменение и восстановите предыдущее значение, если новое значение не прошло проверку
+                tensionColumn.getTableView().getItems().set(event.getTablePosition().getRow(), beam);
+            }
+        });
+    }
+
+    private void buildErrorAlert(String text) throws Exception {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Данные не будут сохранены");
+        alert.setHeaderText(text);
+        alert.showAndWait();
+        throw new Exception();
     }
 
     public void checkBoxLeft() {

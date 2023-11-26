@@ -52,11 +52,13 @@
                             </TableColumn>
                             <TableColumn fx:id="endPointColumn" prefWidth="100" text="Конец">
                             </TableColumn>
-                            <TableColumn fx:id="widthColumn" prefWidth="100" text="Ширина">
-                            </TableColumn>
-                            <TableColumn fx:id="typeColumn" prefWidth="150" text="Тип">
+                            <TableColumn fx:id="squareColumn" prefWidth="100" text="Площадь">
                             </TableColumn>
                             <TableColumn fx:id="strongQColumn" prefWidth="100" text="Сила">
+                            </TableColumn>
+                            <TableColumn fx:id="elasticityColumn" prefWidth="150" text="Модуль упругости">
+                            </TableColumn>
+                            <TableColumn fx:id="tensionColumn" prefWidth="170" text="Допускаемое напряжение">
                             </TableColumn>
                         </columns>
                     </TableView>

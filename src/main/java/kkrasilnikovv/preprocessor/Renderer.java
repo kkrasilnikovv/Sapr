@@ -1,7 +1,9 @@
 package kkrasilnikovv.preprocessor;
 
 import javafx.embed.swing.SwingFXUtils;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
+import javafx.scene.SnapshotParameters;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
@@ -13,23 +15,22 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import kkrasilnikovv.main.Main;
-import kkrasilnikovv.preprocessor.model.BeamData;
-import kkrasilnikovv.preprocessor.model.PointData;
+import kkrasilnikovv.preprocessor.model.Beam;
+import kkrasilnikovv.preprocessor.model.Point;
 import kkrasilnikovv.preprocessor.model.DataFile;
-import kkrasilnikovv.preprocessor.model.SectionType;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 public class Renderer {
-    private double orgSceneX, orgSceneY,orgTranslateX, orgTranslateY;
+    private double orgSceneX, orgSceneY, orgTranslateX, orgTranslateY;
     public Canvas coordinateCanvas;
-    private List<PointData> pointList;
-    private List<BeamData> beamList;
+    private List<Point> pointList;
+    private List<Beam> beamList;
+    private final int scale = 50;
+    double centerX, centerY;
     private boolean isSupportOnRight, isSupportOnLeft;
 
     public Renderer() {
@@ -39,7 +40,7 @@ public class Renderer {
 
     public void draw() {
         loadFromFile();
-        coordinateCanvas = new Canvas(1920,1080);
+        coordinateCanvas = new Canvas(5000, 1500);
         GraphicsContext gc = coordinateCanvas.getGraphicsContext2D();
         double coordinateCanvasWidth = coordinateCanvas.getWidth();
         double coordinateCanvasHeight = coordinateCanvas.getHeight();
@@ -47,8 +48,8 @@ public class Renderer {
         gc.clearRect(0, 0, coordinateCanvasWidth, coordinateCanvasHeight);
 
         // Рисуем координатные оси с учетом масштаба и сдвига
-        double centerX = coordinateCanvasWidth / 2;
-        double centerY = coordinateCanvasHeight / 2;
+        centerX = coordinateCanvasWidth / 2;
+        centerY = coordinateCanvasHeight / 2;
         gc.setStroke(Color.BLACK);
         gc.setLineWidth(1.0);
         gc.strokeLine(0, centerY, coordinateCanvasWidth, centerY); // Горизонтальная ось
@@ -57,81 +58,107 @@ public class Renderer {
         // Позиция оси X после учета сдвига
         double imageWidth = 30; // Фиксированная ширина изображения
         double imageHeight = 30; // Фиксированная высота изображения
-        int scale = 50;
-        double lastX = 0;
-        for (BeamData beam : beamList) {
+        List<Beam> newBeamList = assignCoefficients(beamList);
+        for (Beam beam : newBeamList) {
             double x1 = centerX + beam.getX1() * scale;
             double x2 = centerX + beam.getX2() * scale;
-            double y = centerY - (double) (beam.getWidth() * scale) / 2;
-            double height = beam.getWidth() * scale;
+            double y = centerY - (beam.getCoefficient() * scale) / 2;
+            double height = beam.getCoefficient() * scale;
             gc.strokeRect(x1, y, x2 - x1, height); // Рисуем контур прямоугольника
 
             //Рисуем силы на стержнях
             int strong = beam.getStrongQ();
+            double square = beam.getSquare();
             if (strong > 0) {
-                drawStrongQ(gc, new Image("/right_strong_Q.png"), x1, x2, y, height, strong);
+                drawStrongQ(gc, new Image("/strong_Q.png"), x1, x2, y, height, strong, square);
             } else if (strong < 0) {
-                drawStrongQ(gc, new Image("/left_strong_Q.png"), x1, x2, y, height, strong);
+                drawStrongQ(gc, new Image("/strong_Q.png"), x1, x2, y, height, strong, square);
+            } else {
+                gc.fillText(square + "A", (x1 + x2) / 2 - 10, y - 5);
             }
 
             // Рисуем поддержку перед первым прямоугольником
-            if (isSupportOnLeft && beam.equals(beamList.get(0))) {
+            if (isSupportOnLeft && beam.equals(newBeamList.get(0))) {
                 Image image = new Image("/support_left.PNG");
                 gc.drawImage(image, x1 - imageWidth, y + height / 2 - imageHeight / 2, imageWidth, imageHeight);
             }
 
             // Рисуем поддержку после последнего прямоугольника
-            if (isSupportOnRight && beam.equals(beamList.get(beamList.size() - 1))) {
+            if (isSupportOnRight && beam.equals(newBeamList.get(newBeamList.size() - 1))) {
                 Image image = new Image("/support_right.PNG");
                 gc.drawImage(image, x2 + 1, y + height / 2 - imageHeight / 2, imageWidth, imageHeight);
-                lastX = x2 + 1 + imageWidth;
-            }
-            if (!isSupportOnRight && beam.equals(beamList.get(beamList.size() - 1))) {
-                lastX = x2;
             }
             gc.fillText(beam.getX2() - beam.getX1() + "L", (x1 + x2) / 2 - 10, y + height + 12);
         }
 
         //Рисуем силы на точку
-        for (PointData point : pointList) {
+        for (Point point : pointList) {
+            boolean isFirst = pointList.indexOf(point) == 0;
             int strong = point.getStrong();
             if (strong > 0) {
-                drawStrongF(gc, new Image("/right_strong_F.PNG"), centerX + point.getFx() * scale, centerY, strong);
+                if (isFirst) {
+                    drawFirstStrongF(gc, new Image("/right_strong_F.PNG"), centerX + point.getFx() * scale, centerY, strong);
+                } else {
+                    drawStrongF(gc, new Image("/right_strong_F.PNG"), centerX + point.getFx() * scale, centerY, strong);
+                }
             } else if (strong < 0) {
-                drawStrongF(gc, new Image("/left_strong_F.PNG"), centerX + point.getFx() * scale, centerY, strong);
+                if (isFirst) {
+                    drawFirstStrongF(gc, new Image("/left_strong_F.PNG"), centerX + point.getFx() * scale, centerY, strong);
+                } else {
+                    drawStrongF(gc, new Image("/left_strong_F.PNG"), centerX + point.getFx() * scale, centerY, strong);
+                }
             }
         }
 
-        //Рисуем тип сечения
-        if (Objects.nonNull(beamList) && !beamList.isEmpty()) {
-            String type = beamList.get(0).getSectionType();
-            Image image = null;
-            if (type.equals(SectionType.TRIANGLE.toString())) {
-                image = new Image("/triangle.png");
-            } else if (type.equals(SectionType.CIRCLE.toString())) {
-                image = new Image("/circle.png");
-            } else if (type.equals(SectionType.RECTANGLE.toString())) {
-                image = new Image("/rectangle.png");
-            }
-            double x = lastX + 100;
-            double y = centerY - 200;
-            double imageTypeWidth = 150; // Фиксированная ширина изображения
-            double imageTypeHeight = 150; // Фиксированная высота изображения
-            gc.drawImage(image, x, y, imageTypeWidth, imageTypeHeight);
-            gc.fillText("Тип сечения", x + imageTypeWidth / 2 / 2, y - 5);
-        }
         saveCanvasAsImage();
         showImagePreview();
     }
 
-    private void drawStrongF(GraphicsContext gc, Image image, double x, double y, int strong) {
+    private static List<Beam> assignCoefficients(List<Beam> originalBeamList) {
+        // Создание вспомогательного списка и копирование элементов из оригинального списка
+        List<Beam> tempBeamList = new ArrayList<>(originalBeamList);
+
+        // Сортировка вспомогательного списка по square в порядке возрастания
+        tempBeamList.sort(Comparator.comparingDouble(Beam::getSquare));
+
+        // Присвоение коэффициентов в порядке увеличения square
+        double coefficient = 2;
+        for (Beam beam : tempBeamList) {
+            beam.setCoefficient(coefficient);
+            coefficient += 1; // Увеличение коэффициента
+        }
+
+        // Создание нового списка для результата
+        List<Beam> modifiedBeamList = new ArrayList<>();
+
+        // Проход по исходному списку и установка коэффициентов из вспомогательного списка
+        for (Beam originalBeam : originalBeamList) {
+            for (Beam tempBeam : tempBeamList) {
+                if (originalBeam.getSquare() == tempBeam.getSquare()) {
+                    originalBeam.setCoefficient(tempBeam.getCoefficient());
+                    break;
+                }
+            }
+            modifiedBeamList.add(originalBeam);
+        }
+        return modifiedBeamList;
+    }
+
+    private void drawFirstStrongF(GraphicsContext gc, Image image, double x, double y, int strong) {
         double imageWidth = 30; // Фиксированная ширина изображения
         double imageHeight = 30; // Фиксированная высота изображения
         gc.drawImage(image, x, y - imageHeight / 2, imageWidth, imageHeight);
         gc.fillText(strong + "F", x + imageWidth / 2, y - 15);
     }
 
-    private void drawStrongQ(GraphicsContext gc, Image image, double x1, double x2, double y, double height, int strong) {
+    private void drawStrongF(GraphicsContext gc, Image image, double x, double y, int strong) {
+        double imageWidth = 30; // Фиксированная ширина изображения
+        double imageHeight = 30; // Фиксированная высота изображения
+        gc.drawImage(image, x - imageWidth, y - imageHeight / 2, imageWidth, imageHeight);
+        gc.fillText(strong + "F", x - imageWidth / 2 - 2, y - 15);
+    }
+
+    private void drawStrongQ(GraphicsContext gc, Image image, double x1, double x2, double y, double height, int strong, double square) {
         double imageWidth = 20;
         double imageHeight = 20;
         double start = x1 - imageWidth;
@@ -140,14 +167,20 @@ public class Renderer {
             start += imageWidth;
             gc.drawImage(image, start, y + height / 2 - imageHeight / 2, imageWidth, imageHeight);
         }
-        gc.fillText(strong + "q", (x1 + x2) / 2 - 10, y - 5);
+        gc.fillText(square + "A, " + strong + "Q", (x1 + x2) / 2 - 25, y - 5);
     }
 
     private void saveCanvasAsImage() {
-        // Создайте WritableImage из содержимого Canvas
-        WritableImage writableImage = new WritableImage((int) coordinateCanvas.getWidth(),
-                (int) coordinateCanvas.getHeight());
-        coordinateCanvas.snapshot(null, writableImage);
+        // Получаем границы отрисованных объектов
+        Rectangle2D drawingBounds = calculateDrawingBounds(beamList, pointList, centerX, centerY);
+
+        // Создаем WritableImage с учетом границ
+        WritableImage writableImage = new WritableImage((int) drawingBounds.getWidth(),
+                (int) drawingBounds.getHeight());
+        SnapshotParameters parameters = new SnapshotParameters();
+        parameters.setViewport(new Rectangle2D(drawingBounds.getMinX(), drawingBounds.getMinY(),
+                drawingBounds.getWidth(), drawingBounds.getHeight()));
+        coordinateCanvas.snapshot(parameters, writableImage);
 
         // Создайте файл для сохранения изображения
         File file = new File("image.png");
@@ -165,13 +198,51 @@ public class Renderer {
         }
     }
 
+    private Rectangle2D calculateDrawingBounds(List<Beam> beamList, List<Point> pointList, double centerX, double centerY) {
+        double minX = Double.MAX_VALUE;
+        double minY = Double.MAX_VALUE;
+        double maxX = Double.MIN_VALUE;
+        double maxY = Double.MIN_VALUE;
+
+        for (Beam beam : beamList) {
+            double x1 = centerX + beam.getX1() * scale;
+            double x2 = centerX + beam.getX2() * scale;
+            double y = centerY - (beam.getCoefficient() * scale) / 2;
+            double height = beam.getCoefficient() * scale;
+
+            minX = Math.min(minX, x1);
+            minY = Math.min(minY, y);
+            maxX = Math.max(maxX, x2);
+            maxY = Math.max(maxY, y + height);
+        }
+
+        for (Point point : pointList) {
+            double x = centerX + point.getFx() * scale;
+
+            minX = Math.min(minX, x);
+            minY = Math.min(minY, centerY);
+            maxX = Math.max(maxX, x);
+            maxY = Math.max(maxY, centerY);
+        }
+
+        double paddingWidth = 300;
+        double paddingHeight = 200;
+
+        minX -= paddingWidth;
+        minY -= paddingHeight;
+        maxX += paddingWidth;
+        maxY += paddingHeight;
+
+        return new Rectangle2D(minX, minY, maxX - minX, maxY - minY);
+    }
+
     private void loadFromFile() {
         pointList.clear();
         beamList.clear();
         DataFile dataFile = null;
         File file = Main.getDataFile();
         if (Objects.nonNull(file)) {
-            dataFile = Main.convertFileToData(file,false);
+            dataFile = Main.convertFileToData(file, false);
         }
 
         if (Objects.nonNull(dataFile)) {
@@ -224,7 +295,6 @@ public class Renderer {
             VBox vbox = new VBox(imageView);
             Scene scene = new Scene(vbox, 800, 600);
             stage.setScene(scene);
-            stage.setTitle("Image Preview");
             stage.show();
         } catch (Exception e) {
             e.printStackTrace();

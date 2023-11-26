@@ -15,11 +15,14 @@ import kkrasilnikovv.preprocessor.model.DataFile;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Objects;
 import java.util.Optional;
 
 public class Controller {
     private final Gson gson = new GsonBuilder().create();
     public Button loadButton, calculateButton, backButton;
+    private CalculationFile calculationFile;
+    private DataFile dataFile;
 
     public void loadEvent(ActionEvent actionEvent) {
         FileChooser fileChooser = new FileChooser();
@@ -30,14 +33,33 @@ public class Controller {
     }
 
     private void loadFromFile(DataFile dataFile) {
-
+        this.dataFile = dataFile;
     }
 
-    public void calculateEvent(ActionEvent event) {
-        saveCalculation();
+    public void calculateEvent() {
+        DataFile selectedFile = null;
+        if (Objects.nonNull(dataFile) && !dataFile.isEmpty()) {
+            selectedFile = dataFile;
+        } else {
+            DataFile mainFile = Main.convertFileToData(Main.getDataFile(), false);
+            if (Objects.nonNull(mainFile) && !mainFile.isEmpty()) {
+                selectedFile = mainFile;
+            }
+        }
+        if (Objects.nonNull(selectedFile) && !selectedFile.isEmpty()) {
+            saveCalculation();
+        } else {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Ошибка");
+            alert.setHeaderText("Не найден файл с исходными данными. Выберите файл при помощи \"Загрузить данные из файла\".");
+            alert.showAndWait();
+        }
     }
 
     private void saveCalculation() {
+        Alert alertInfo = new Alert(Alert.AlertType.INFORMATION);
+        alertInfo.setHeaderText("Выберите папку для сохранения файла.");
+        alertInfo.showAndWait();
         DirectoryChooser directoryChooser = new DirectoryChooser();
         directoryChooser.setTitle("Выберите папку для сохранения файла");
 
@@ -72,7 +94,7 @@ public class Controller {
     private void writeCalculationToFile(File file) {
         Alert alert;
         try (FileWriter fileWriter = new FileWriter(file)) {
-            fileWriter.write(gson.toJson(new CalculationFile()));
+            fileWriter.write(gson.toJson(calculationFile));
             alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setTitle("Данные успешно сохранены");
             alert.setHeaderText("Сохранено в файл: " + file.getAbsolutePath());
@@ -83,6 +105,18 @@ public class Controller {
             alert.setHeaderText("Невозможно сохранить в файл:" + file.getName());
             alert.showAndWait();
         }
+    }
+
+    private void calculateNormalVoltage() {
+
+    }
+
+    private void calculateLongitudinalStrong() {
+
+    }
+
+    private void calculateMoving() {
+
     }
 
     public void backEvent() {

@@ -3,11 +3,11 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.VBox?>
 <VBox alignment="CENTER" spacing="20.0" xmlns:fx="http://javafx.com/fxml"
-      fx:controller="kkrasilnikovv.processor.Controller" prefHeight="400" prefWidth="400">
+      fx:controller="kkrasilnikovv.postprocessor.Controller" prefHeight="400" prefWidth="400">
     <Label text="Препроцессор" style="-fx-font-size: 20"/>
     <Button fx:id="loadButton" text="Загрузить данные из файла" onAction="#loadEvent" minHeight="50" minWidth="200"
             id="preprocessor"/>
-    <Button fx:id="calculateButton" text="Произвести расчеты" onMouseClicked="#calculateEvent" minHeight="50" minWidth="200"
+    <Button fx:id="calculateButton" text="Показать расчеты" onAction="#showEvent" minHeight="50" minWidth="200"
             id="processor"/>
     <Button fx:id="backButton" text="Назад" onMouseClicked="#backEvent" minHeight="50" minWidth="200"
             id="processor"/>

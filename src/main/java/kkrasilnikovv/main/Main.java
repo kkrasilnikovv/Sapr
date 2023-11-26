@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
 import javafx.application.Application;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.fxml.FXMLLoader;
@@ -12,6 +13,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.stage.Stage;
 import kkrasilnikovv.preprocessor.model.DataFile;
+import kkrasilnikovv.preprocessor.prorepty_adapter.SimpleDoublePropertyAdapter;
 import kkrasilnikovv.preprocessor.prorepty_adapter.SimpleIntegerPropertyAdapter;
 import kkrasilnikovv.preprocessor.prorepty_adapter.SimpleStringPropertyAdapter;
 import lombok.Getter;
@@ -29,6 +31,7 @@ public class Main extends Application {
     private final static Gson gson = new GsonBuilder()
             .registerTypeAdapter(SimpleIntegerProperty.class, new SimpleIntegerPropertyAdapter())
             .registerTypeAdapter(SimpleStringProperty.class, new SimpleStringPropertyAdapter())
+            .registerTypeAdapter(SimpleDoubleProperty.class,new SimpleDoublePropertyAdapter())
             .create();
 
     @Override
@@ -63,19 +66,17 @@ public class Main extends Application {
                     Main.setDataFile(file);
                 }
             } catch (FileNotFoundException e) {
-                showAlert("Ошибка", "Файл не найден.", Alert.AlertType.ERROR);
+                showAlert("Файл не найден.");
             } catch (JsonSyntaxException ex) {
-                showAlert("Ошибка", "Ошибка синтаксиса JSON в файле.", Alert.AlertType.ERROR);
+                showAlert("Ошибка синтаксиса JSON в файле.");
             }
-        } else {
-            showAlert("Информация", "Файл не найден.", Alert.AlertType.INFORMATION);
         }
         return dataFile;
     }
 
-    private static void showAlert(String title, String content, Alert.AlertType type) {
-        Alert alert = new Alert(type);
-        alert.setTitle(title);
+    private static void showAlert(String content) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Ошибка");
         alert.setHeaderText(null);
         alert.setContentText(content);
         alert.showAndWait();
