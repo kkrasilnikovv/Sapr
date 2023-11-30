@@ -4,8 +4,8 @@ package kkrasilnikovv.preprocessor.model;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 
 @AllArgsConstructor
@@ -17,14 +17,7 @@ public class DataFile {
     private boolean supportOnLeft;
     private boolean supportOnRight;
 
-    public DataFile() {
-        pointList = new ArrayList<>();
-        beamList = new ArrayList<>();
-        lastIdPoint = 0;
-        supportOnLeft = false;
-        supportOnRight = false;
-    }
-    public boolean isEmpty(){
-        return pointList.isEmpty()&&beamList.isEmpty();
+    public boolean isEmpty() {
+        return (Objects.isNull(pointList) || Objects.isNull(beamList)) || (pointList.isEmpty() && beamList.isEmpty());
     }
 }

@@ -31,7 +31,7 @@ public class Main extends Application {
     private final static Gson gson = new GsonBuilder()
             .registerTypeAdapter(SimpleIntegerProperty.class, new SimpleIntegerPropertyAdapter())
             .registerTypeAdapter(SimpleStringProperty.class, new SimpleStringPropertyAdapter())
-            .registerTypeAdapter(SimpleDoubleProperty.class,new SimpleDoublePropertyAdapter())
+            .registerTypeAdapter(SimpleDoubleProperty.class, new SimpleDoublePropertyAdapter())
             .create();
 
     @Override
@@ -57,13 +57,16 @@ public class Main extends Application {
     }
 
     public static DataFile convertFileToData(File file, boolean isMainFile) {
-        DataFile dataFile = new DataFile();
+        DataFile dataFile = null;
         if (Objects.nonNull(file)) {
             try {
                 BufferedReader reader = new BufferedReader(new FileReader(file));
                 dataFile = gson.fromJson(reader, DataFile.class);
                 if (isMainFile) {
                     Main.setDataFile(file);
+                }
+                if (Objects.isNull(dataFile) || dataFile.isEmpty()) {
+                    showAlert("Получен файл с неверной структурой или с отсутствующими значениями.");
                 }
             } catch (FileNotFoundException e) {
                 showAlert("Файл не найден.");
