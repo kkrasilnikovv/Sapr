@@ -4,6 +4,7 @@ module kkrasilnikovv {
     requires static lombok;
     requires com.google.gson;
     requires javafx.swing;
+    requires commons.math3;
     opens kkrasilnikovv.main;
     opens kkrasilnikovv.preprocessor;
     opens kkrasilnikovv.preprocessor.controller;

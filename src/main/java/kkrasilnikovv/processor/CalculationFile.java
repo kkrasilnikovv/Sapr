@@ -12,7 +12,7 @@ import java.util.Map;
 @Getter
 @Setter
 public class CalculationFile {
-    private Map<Integer,Double> normalVoltage;
-    private Map<Integer,Double> longitudinalStrong;
-    private Map<Integer,Double> moving;
+    private Map<Integer,Double[]> normalVoltage;
+    private Map<Integer,Double[]> longitudinalStrong;
+    private Map<Integer,Double[]> moving;
 }

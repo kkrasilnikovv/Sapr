@@ -47,6 +47,9 @@ public class Controller {
             }
         }
         if (Objects.nonNull(selectedFile) && !selectedFile.isEmpty()) {
+            Calculators calculators = new Calculators();
+            Calculator calculator = calculators.calculate(selectedFile);
+            this.calculationFile = calculator.getStringRepresentation();
             saveCalculation();
         } else {
             Alert alert = new Alert(Alert.AlertType.ERROR);
@@ -105,18 +108,6 @@ public class Controller {
             alert.setHeaderText("Невозможно сохранить в файл:" + file.getName());
             alert.showAndWait();
         }
-    }
-
-    private void calculateNormalVoltage() {
-
-    }
-
-    private void calculateLongitudinalStrong() {
-
-    }
-
-    private void calculateMoving() {
-
     }
 
     public void backEvent() {
