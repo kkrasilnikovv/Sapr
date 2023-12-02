@@ -15,7 +15,7 @@ public class Calculator {
         this.longitudinalForceCalculations = longitudinalForceCalculations;
     }
 
-    public CalculationFile getStringRepresentation() {
+    public List<Map<Integer, Double[]>> getStringRepresentation() {
         Map<Integer, Double[]> normalVoltage = new HashMap<>();
         Map<Integer, Double[]> longitudinalStrong = new HashMap<>();
         Map<Integer, Double[]> moving = new HashMap<>();
@@ -25,7 +25,7 @@ public class Calculator {
             longitudinalStrong.put(barIndex + 1, longitudinalForceCalculations.get(barIndex).representation());
             moving.put(barIndex + 1, movementsCalculations.get(barIndex).representation());
         }
-        return new CalculationFile(normalVoltage, longitudinalStrong, moving);
+        return List.of(normalVoltage, longitudinalStrong, moving);
     }
 
     @Override

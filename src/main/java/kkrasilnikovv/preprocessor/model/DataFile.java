@@ -18,6 +18,6 @@ public class DataFile {
     private boolean supportOnRight;
 
     public boolean isEmpty() {
-        return (Objects.isNull(pointList) || Objects.isNull(beamList)) || (pointList.isEmpty() && beamList.isEmpty());
+        return Objects.isNull(pointList) || Objects.isNull(beamList) || pointList.isEmpty() || beamList.isEmpty();
     }
 }

@@ -11,11 +11,14 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
+import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
+import kkrasilnikovv.postprocessor.Controller;
 import kkrasilnikovv.preprocessor.model.DataFile;
 import kkrasilnikovv.preprocessor.prorepty_adapter.SimpleDoublePropertyAdapter;
 import kkrasilnikovv.preprocessor.prorepty_adapter.SimpleIntegerPropertyAdapter;
 import kkrasilnikovv.preprocessor.prorepty_adapter.SimpleStringPropertyAdapter;
+import kkrasilnikovv.processor.CalculationFile;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -28,6 +31,9 @@ public class Main extends Application {
     @Setter
     @Getter
     private static File dataFile;
+    @Getter
+    private static File calculationFile;
+    private static Controller controller;
     private final static Gson gson = new GsonBuilder()
             .registerTypeAdapter(SimpleIntegerProperty.class, new SimpleIntegerPropertyAdapter())
             .registerTypeAdapter(SimpleStringProperty.class, new SimpleStringPropertyAdapter())
@@ -43,7 +49,9 @@ public class Main extends Application {
         showsScene.setScene(mainScene);
         showsScene.show();
     }
-
+    public static void setTitle(String title){
+        showsScene.setTitle(title);
+    }
     public static void main(String[] args) {
         launch(args);
     }
@@ -54,6 +62,7 @@ public class Main extends Application {
 
     public static void showMainScene() {
         showsScene.setScene(mainScene);
+        showsScene.setTitle("САПР");
     }
 
     public static DataFile convertFileToData(File file, boolean isMainFile) {
@@ -62,11 +71,13 @@ public class Main extends Application {
             try {
                 BufferedReader reader = new BufferedReader(new FileReader(file));
                 dataFile = gson.fromJson(reader, DataFile.class);
-                if (isMainFile) {
-                    Main.setDataFile(file);
-                }
+
                 if (Objects.isNull(dataFile) || dataFile.isEmpty()) {
                     showAlert("Получен файл с неверной структурой или с отсутствующими значениями.");
+                }else {
+                    if (isMainFile) {
+                        Main.setDataFile(file);
+                    }
                 }
             } catch (FileNotFoundException e) {
                 showAlert("Файл не найден.");
@@ -75,6 +86,29 @@ public class Main extends Application {
             }
         }
         return dataFile;
+    }
+    public static CalculationFile convertFileToDataCalculation(File file) {
+        CalculationFile calculationFile = null;
+        if (Objects.nonNull(file)) {
+            try {
+                BufferedReader reader = new BufferedReader(new FileReader(file));
+                calculationFile = gson.fromJson(reader, CalculationFile.class);
+                if (Objects.isNull(calculationFile) || calculationFile.isEmpty()) {
+                    showAlert("Получен файл с неверной структурой или с отсутствующими значениями.");
+                }else {
+                    Main.setCalculationFile(file);
+                }
+            } catch (FileNotFoundException e) {
+                showAlert("Файл не найден.");
+            } catch (JsonSyntaxException ex) {
+                showAlert("Ошибка синтаксиса JSON в файле.");
+            }
+        }
+        return calculationFile;
+    }
+
+    public static void setCalculationFile(File calculationFile) {
+        Main.calculationFile = calculationFile;
     }
 
     private static void showAlert(String content) {

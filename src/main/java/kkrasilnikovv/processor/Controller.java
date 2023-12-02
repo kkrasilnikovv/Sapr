@@ -21,36 +21,27 @@ import java.util.Optional;
 public class Controller {
     private final Gson gson = new GsonBuilder().create();
     public Button loadButton, calculateButton, backButton;
-    private CalculationFile calculationFile;
-    private DataFile dataFile;
 
     public void loadEvent(ActionEvent actionEvent) {
         FileChooser fileChooser = new FileChooser();
         fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("JSON Files", "*data.json"));
         // Открываем диалоговое окно выбора файла
         File selectedFile = fileChooser.showOpenDialog(((Node) actionEvent.getTarget()).getScene().getWindow());
-        loadFromFile(Main.convertFileToData(selectedFile, false));
-    }
-
-    private void loadFromFile(DataFile dataFile) {
-        this.dataFile = dataFile;
+        Main.convertFileToData(selectedFile, true);
+        File file = Main.getDataFile();
+        if (Objects.nonNull(file)) {
+            Main.setTitle(file.getAbsolutePath());
+        }
     }
 
     public void calculateEvent() {
-        DataFile selectedFile = null;
-        if (Objects.nonNull(dataFile) && !dataFile.isEmpty()) {
-            selectedFile = dataFile;
-        } else {
-            DataFile mainFile = Main.convertFileToData(Main.getDataFile(), false);
-            if (Objects.nonNull(mainFile) && !mainFile.isEmpty()) {
-                selectedFile = mainFile;
-            }
-        }
-        if (Objects.nonNull(selectedFile) && !selectedFile.isEmpty()) {
+        DataFile mainFile = Main.convertFileToData(Main.getDataFile(), false);
+        if (Objects.nonNull(mainFile) && !mainFile.isEmpty()) {
             Calculators calculators = new Calculators();
-            Calculator calculator = calculators.calculate(selectedFile);
-            this.calculationFile = calculator.getStringRepresentation();
-            saveCalculation();
+            CalculationFile calculationFile = calculators.calculate(mainFile);
+            if (Objects.nonNull(calculationFile) && !calculationFile.isEmpty()) {
+                saveCalculation(calculationFile);
+            }
         } else {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Ошибка");
@@ -59,7 +50,7 @@ public class Controller {
         }
     }
 
-    private void saveCalculation() {
+    private void saveCalculation(CalculationFile calculationFile) {
         Alert alertInfo = new Alert(Alert.AlertType.INFORMATION);
         alertInfo.setHeaderText("Выберите папку для сохранения файла.");
         alertInfo.showAndWait();
@@ -79,7 +70,7 @@ public class Controller {
             if (result.isPresent()) {
                 String fileName = result.get();
                 File file = new File(selectedDirectory, fileName + ".json");
-                writeCalculationToFile(file);
+                writeCalculationToFile(file,calculationFile);
             } else {
                 Alert alert = new Alert(Alert.AlertType.ERROR);
                 alert.setTitle("Данные не будут сохранены");
@@ -94,10 +85,11 @@ public class Controller {
         }
     }
 
-    private void writeCalculationToFile(File file) {
+    private void writeCalculationToFile(File file,CalculationFile calculationFile) {
         Alert alert;
         try (FileWriter fileWriter = new FileWriter(file)) {
             fileWriter.write(gson.toJson(calculationFile));
+            Main.setCalculationFile(file);
             alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setTitle("Данные успешно сохранены");
             alert.setHeaderText("Сохранено в файл: " + file.getAbsolutePath());

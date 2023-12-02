@@ -65,6 +65,11 @@ public class DataController {
         fxColumn.setCellValueFactory(cellData -> cellData.getValue().fxProperty().asObject());
         strongFColumn.setCellValueFactory(cellData -> cellData.getValue().StrongFProperty().asObject());
 
+        idColumn.setSortable(false);
+        fxColumn.setSortable(false);
+        strongFColumn.setSortable(false);
+
+
         idColumn.setCellFactory(TextFieldTableCell.forTableColumn(new IntegerStringConverter()));
         fxColumn.setCellFactory(TextFieldTableCell.forTableColumn(new DoubleStringConverter()));
         strongFColumn.setCellFactory(TextFieldTableCell.forTableColumn(new IntegerStringConverter()));
@@ -85,6 +90,14 @@ public class DataController {
         strongQColumn.setCellValueFactory(cellData -> cellData.getValue().strongQProperty().asObject());
         elasticityColumn.setCellValueFactory(cellData -> cellData.getValue().elasticityProperty().asObject());
         tensionColumn.setCellValueFactory(cellData -> cellData.getValue().tensionProperty().asObject());
+
+        beamIdColumn.setSortable(false);
+        startPointColumn.setSortable(false);
+        endPointColumn.setSortable(false);
+        squareColumn.setSortable(false);
+        strongQColumn.setSortable(false);
+        elasticityColumn.setSortable(false);
+        tensionColumn.setSortable(false);
 
         beamIdColumn.setCellFactory(TextFieldTableCell.forTableColumn(new IntegerStringConverter()));
         squareColumn.setCellFactory(TextFieldTableCell.forTableColumn(new DoubleStringConverter()));
@@ -268,8 +281,14 @@ public class DataController {
         fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("JSON Files", "*data.json"));
         // Открываем диалоговое окно выбора файла
         File selectedFile = fileChooser.showOpenDialog(((Node) actionEvent.getTarget()).getScene().getWindow());
-        Main.setDataFile(selectedFile);
-        loadFromFile(Main.convertFileToData(Main.getDataFile(), true));
+        DataFile dataFile = Main.convertFileToData(selectedFile, true);
+        if (Objects.nonNull(dataFile) && !dataFile.isEmpty()) {
+            loadFromFile(dataFile);
+        }
+        File file = Main.getDataFile();
+        if (Objects.nonNull(file)) {
+            Main.setTitle(file.getAbsolutePath());
+        }
     }
 
     private void loadFromFile(DataFile dataFile) {

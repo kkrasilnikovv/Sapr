@@ -6,6 +6,7 @@ import javafx.scene.Scene;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.control.Alert;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.WritableImage;
@@ -39,7 +40,12 @@ public class Renderer {
     }
 
     public void draw() {
-        loadFromFile();
+        try {
+            loadFromFile();
+        } catch (Exception e) {
+            return;
+        }
+
         coordinateCanvas = new Canvas(5000, 1500);
         GraphicsContext gc = coordinateCanvas.getGraphicsContext2D();
         double coordinateCanvasWidth = coordinateCanvas.getWidth();
@@ -236,7 +242,7 @@ public class Renderer {
         return new Rectangle2D(minX, minY, maxX - minX, maxY - minY);
     }
 
-    private void loadFromFile() {
+    private void loadFromFile() throws Exception {
         pointList.clear();
         beamList.clear();
         DataFile dataFile = null;
@@ -250,6 +256,13 @@ public class Renderer {
             beamList = dataFile.getBeamList();
             isSupportOnLeft = dataFile.isSupportOnLeft();
             isSupportOnRight = dataFile.isSupportOnRight();
+        } else {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Ошибка");
+            alert.setHeaderText(null);
+            alert.setContentText("Не найден файл с исходными данными. Выберите файл при помощи \"Загрузить данные из файла\" в разделе \"Добавить/изменить данные\".");
+            alert.showAndWait();
+            throw new Exception();
         }
 
     }
