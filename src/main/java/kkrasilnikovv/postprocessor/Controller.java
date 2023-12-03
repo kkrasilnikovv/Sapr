@@ -27,7 +27,8 @@ import java.util.Objects;
 public class Controller {
     @FXML
     public TabPane tabPane;
-
+    public Button refreshButton, loadButton, backupButton, showValueNormalVoltageButton, showGraphNormalVoltageButton;
+    public Button showValueMovingButton, showGraphMovingButton, showValueStrongButton, showGraphStrongButton;
     @FXML
     private TableView<IntegerWrapper> voltageTable;
 
@@ -53,6 +54,19 @@ public class Controller {
     private final ObservableList<IntegerWrapper> strongData = FXCollections.observableArrayList();
 
     public void initialize() {
+        String valueButton = "Показать значение выбранного стержня";
+        showValueNormalVoltageButton.setTooltip(new Tooltip(valueButton));
+        showValueMovingButton.setTooltip(new Tooltip(valueButton));
+        showValueStrongButton.setTooltip(new Tooltip(valueButton));
+
+        String graphButton = "Показать график выбранного стержня";
+        showGraphNormalVoltageButton.setTooltip(new Tooltip(graphButton));
+        showGraphMovingButton.setTooltip(new Tooltip(graphButton));
+        showGraphStrongButton.setTooltip(new Tooltip(graphButton));
+
+        refreshButton.setTooltip(new Tooltip("Отобразить данные, которые были сгенерированы в процессоре"));
+        loadButton.setTooltip(new Tooltip("Отобразить данные из файла"));
+        backupButton.setTooltip(new Tooltip("Вернуться назад"));
         int sizeColumn = 797;
         idColumnNormalVoltage.setCellValueFactory(cellData -> cellData.getValue().valueProperty().asObject());
         idColumnNormalVoltage.setCellFactory(TextFieldTableCell.forTableColumn(new IntegerStringConverter()));
@@ -129,38 +143,50 @@ public class Controller {
 
     public void showValueNormalVoltage() {
         DataInTable result = getDataInTable(voltageTable, normalVoltage);
-        createTable("Нормальное напряжение на стержне №" + result.getIndex(),
-                result.getX(), "σx", result.getValue());
+        if (!result.isEmpty()) {
+            createTable("Нормальное напряжение на стержне №" + result.getIndex(),
+                    result.getX(), "σx", result.getValue());
+        }
     }
 
     public void showGraphNormalVoltage() {
         DataInTable result = getDataInTable(voltageTable, normalVoltage);
-        createSmoothChart("Нормальное напряжение на стержне №" + result.getIndex(), "σx",
-                "Нормальное напряжение в точке", result.getX(), result.getValue());
+        if (!result.isEmpty()) {
+            createSmoothChart("Нормальное напряжение на стержне №" + result.getIndex(), "σx",
+                    "Нормальное напряжение в точке", result.getX(), result.getValue());
+        }
     }
 
     public void showValueMoving() {
         DataInTable result = getDataInTable(movingTable, moving);
-        createTable("Перемещения на стержне №" + result.getIndex(),
-                result.getX(), "Ux", result.getValue());
+        if (!result.isEmpty()) {
+            createTable("Перемещения на стержне №" + result.getIndex(),
+                    result.getX(), "Ux", result.getValue());
+        }
     }
 
     public void showGraphMoving() {
         DataInTable result = getDataInTable(movingTable, moving);
-        createSmoothChart("Перемещения на стержне №" + result.getIndex(), "Ux",
-                "Перемещение в точке", result.getX(), result.getValue());
+        if (!result.isEmpty()) {
+            createSmoothChart("Перемещения на стержне №" + result.getIndex(), "Ux",
+                    "Перемещение в точке", result.getX(), result.getValue());
+        }
     }
 
     public void showValueStrong() {
         DataInTable result = getDataInTable(strongTable, longitudinalStrong);
-        createTable("Продольные силы на стержне №" + result.getIndex()
-                , result.getX(), "Nx", result.getValue());
+        if (!result.isEmpty()) {
+            createTable("Продольные силы на стержне №" + result.getIndex()
+                    , result.getX(), "Nx", result.getValue());
+        }
     }
 
     public void showGraphStrong() {
         DataInTable result = getDataInTable(strongTable, longitudinalStrong);
-        createSmoothChart("Продольные силы на стержне №" + result.getIndex(), "Nx",
-                "Продольные силы в точке", result.getX(), result.getValue());
+        if (!result.isEmpty()) {
+            createSmoothChart("Продольные силы на стержне №" + result.getIndex(), "Nx",
+                    "Продольные силы в точке", result.getX(), result.getValue());
+        }
     }
 
     private <T extends Data> DataInTable getDataInTable(TableView<?> tableView, Map<Integer, List<T>> data) {
@@ -171,6 +197,11 @@ public class Controller {
             List<Double> values = strongDataList.stream().map(Data::getValue).toList();
             return new DataInTable((selectedIndex + 1), x, values);
         } else {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Предупреждение");
+            alert.setHeaderText(null);
+            alert.setContentText("Стержень не выбран. Выберите стержень в таблице кликом по нему.");
+            alert.showAndWait();
             return new DataInTable();
         }
     }
@@ -208,25 +239,25 @@ public class Controller {
         stage.show();
     }
 
-    private void createTable(String stageName, List<Double> value1, String columnName2, List<Double> value2) {
+    private void createTable(String stageName, List<Double> length, String columnValueName, List<Double> value) {
         ObservableList<CustomData> data = FXCollections.observableArrayList();
-        for (int i = 0; i < value1.size(); i++) {
-            data.add(new CustomData(value1.get(i), value2.get(i)));
+        for (int i = 0; i < length.size(); i++) {
+            data.add(new CustomData(length.get(i), value.get(i)));
         }
         TableView<CustomData> table = new TableView<>();
-        TableColumn<CustomData, Double> column1 = new TableColumn<>("L(x)");
+        TableColumn<CustomData, Double> lengthColumn = new TableColumn<>("L(x)");
 
-        column1.setCellValueFactory(cellData -> cellData.getValue().xProperty().asObject());
-        column1.setMinWidth(197);
-        column1.setSortable(false);
+        lengthColumn.setCellValueFactory(cellData -> cellData.getValue().xProperty().asObject());
+        lengthColumn.setMinWidth(197);
+        lengthColumn.setSortable(false);
 
-        TableColumn<CustomData, Double> column2 = new TableColumn<>(columnName2);
+        TableColumn<CustomData, Double> valueColumn = new TableColumn<>(columnValueName);
 
-        column2.setCellValueFactory(cellData -> cellData.getValue().valueProperty().asObject());
-        column2.setMinWidth(197);
-        column2.setSortable(false);
+        valueColumn.setCellValueFactory(cellData -> cellData.getValue().valueProperty().asObject());
+        valueColumn.setMinWidth(197);
+        valueColumn.setSortable(false);
 
-        table.getColumns().addAll(column1, column2);
+        table.getColumns().addAll(lengthColumn, valueColumn);
         table.setItems(data);
 
         Scene scene = new Scene(new VBox(table), 400, 300);
@@ -234,6 +265,17 @@ public class Controller {
         stage.setScene(scene);
         stage.setTitle(stageName);
         stage.show();
+    }
+
+    public void refreshEvent() {
+        File file = Main.getCalculationFile();
+        if (Objects.nonNull(file)) {
+            CalculationFile calculationFile = Main.convertFileToDataCalculation(file);
+            if (Objects.nonNull(calculationFile) && !calculationFile.isEmpty()) {
+                loadFromFile(calculationFile);
+                Main.setTitle(file.getAbsolutePath());
+            }
+        }
     }
 
     public static class CustomData {

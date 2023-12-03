@@ -8,8 +8,9 @@
             fx:controller="kkrasilnikovv.postprocessor.Controller">
     <top>
         <HBox alignment="TOP_RIGHT" spacing="10">
-            <Button text="Загрузить данные из файла" onAction="#loadEvent"/>
-            <Button text="Назад" onAction="#backup" />
+            <Button fx:id="refreshButton" text="Обновить данные"  onMouseClicked="#refreshEvent"/>
+            <Button fx:id="loadButton" text="Загрузить данные из файла" onAction="#loadEvent"/>
+            <Button fx:id="backupButton" text="Назад" onMouseClicked="#backup" />
         </HBox>
     </top>
     <center>
@@ -26,8 +27,8 @@
                         </columns>
                     </TableView>
                     <HBox spacing="10">
-                        <Button text="Показать значение" onAction="#showValueNormalVoltage"/>
-                        <Button text="Показать график" onAction="#showGraphNormalVoltage"/>
+                        <Button fx:id="showValueNormalVoltageButton" text="Показать значение" onAction="#showValueNormalVoltage"/>
+                        <Button fx:id="showGraphNormalVoltageButton" text="Показать график" onAction="#showGraphNormalVoltage"/>
                     </HBox>
                 </VBox>
             </Tab>
@@ -43,8 +44,8 @@
                         </columns>
                     </TableView>
                     <HBox spacing="10">
-                        <Button text="Показать значение" onAction="#showValueMoving"/>
-                        <Button text="Показать график" onAction="#showGraphMoving"/>
+                        <Button fx:id="showValueMovingButton" text="Показать значение" onAction="#showValueMoving"/>
+                        <Button fx:id="showGraphMovingButton" text="Показать график" onAction="#showGraphMoving"/>
                     </HBox>
                 </VBox>
             </Tab>
@@ -60,8 +61,8 @@
                         </columns>
                     </TableView>
                     <HBox spacing="10">
-                        <Button text="Показать значение" onAction="#showValueStrong"/>
-                        <Button text="Показать график" onAction="#showGraphStrong"/>
+                        <Button fx:id="showValueStrongButton" text="Показать значение" onAction="#showValueStrong"/>
+                        <Button fx:id="showGraphStrongButton" text="Показать график" onAction="#showGraphStrong"/>
                     </HBox>
                 </VBox>
             </Tab>

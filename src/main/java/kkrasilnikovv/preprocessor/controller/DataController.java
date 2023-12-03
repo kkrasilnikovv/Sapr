@@ -34,6 +34,7 @@ import java.util.Optional;
 public class DataController {
     public TabPane tabPane;
     public CheckBox checkBoxLeft, checkBoxRight;
+    public Button loadButton, backupButton, addPointButton, deletePointButton, addBeamButton, deleteBeamButton;
     @FXML
     private TableView<Point> pointTable;
     @FXML
@@ -55,6 +56,12 @@ public class DataController {
 
 
     public void initialize() {
+        loadButton.setTooltip(new Tooltip("Отобразить данные из файла"));
+        backupButton.setTooltip(new Tooltip("Вернуться назад и сохранить изменения,если это необходимо"));
+        addPointButton.setTooltip(new Tooltip("Добавить новый узел"));
+        deletePointButton.setTooltip(new Tooltip("Удалить выбранный узел"));
+        addBeamButton.setTooltip(new Tooltip("Добавить новый стержень"));
+        deleteBeamButton.setTooltip(new Tooltip("Удалить выбранный стержень"));
         gson = new GsonBuilder()
                 .registerTypeAdapter(SimpleIntegerProperty.class, new SimpleIntegerPropertyAdapter())
                 .registerTypeAdapter(SimpleStringProperty.class, new SimpleStringPropertyAdapter())
@@ -134,6 +141,12 @@ public class DataController {
             pointTable.getItems().remove(selectedIndex);
             nodeOptions.remove(selectedIndex);
             lastIdPoint = pointTable.getItems().stream().mapToInt(Point::getId).max().orElse(0);
+        } else {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Предупреждение");
+            alert.setHeaderText(null);
+            alert.setContentText("Узел не выбран. Выберите узел в таблице кликом по нему.");
+            alert.showAndWait();
         }
     }
 
@@ -142,6 +155,12 @@ public class DataController {
         if (!beamTable.getSelectionModel().isEmpty()) {
             int selectedIndex = beamTable.getSelectionModel().getSelectedIndex();
             beamTable.getItems().remove(selectedIndex);
+        } else {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Предупреждение");
+            alert.setHeaderText(null);
+            alert.setContentText("Стержень не выбран. Выберите стержень в таблице кликом по нему.");
+            alert.showAndWait();
         }
     }
 
