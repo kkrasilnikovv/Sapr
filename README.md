@@ -2,10 +2,8 @@
 
 ## Скачать
 
-- [**Скачать на MacOs
-  **](https://disk.yandex.ru/d/L9hpDa7NucYt6w) <!-- Замените # на фактическую ссылку на ваш файл для MacOS -->
-- [**Скачать на Windows
-  **](https://disk.yandex.ru/d/qDGdm20x8VbEJQ) <!-- Замените # на фактическую ссылку на ваш файл для Windows -->
+- [**Скачать на MacOs**](https://disk.yandex.ru/d/L9hpDa7NucYt6w) 
+- [**Скачать на Windows**](https://disk.yandex.ru/d/qDGdm20x8VbEJQ) 
 
 ## Пример использования
 
