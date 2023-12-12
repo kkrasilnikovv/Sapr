@@ -249,6 +249,7 @@ public class DataController {
         if (!isNotEmptySupports) {
             buildErrorAlert("Конструкция не может существовать хотя бы без 1 поддержки.");
         }
+
         beams.forEach(beam -> points.forEach(point -> {
             if (beam.getStartPoint() == point.getId()) {
                 beam.setX1(point.getFx());
@@ -282,6 +283,7 @@ public class DataController {
             fileWriter.write(gson.toJson(new DataFile(pointList, beamList,
                     lastIdPoint, isSupportOnLeft, isSupportOnRight)));
             Main.setDataFile(file);
+            Main.setTitle(file.getAbsolutePath());
             alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setTitle("Данные успешно сохранены");
             alert.setHeaderText("Сохранено в файл: " + file.getAbsolutePath());

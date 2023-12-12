@@ -308,6 +308,7 @@ public class Renderer {
             VBox vbox = new VBox(imageView);
             Scene scene = new Scene(vbox, 800, 600);
             stage.setScene(scene);
+            stage.setTitle(Main.getDataFile().getAbsolutePath());
             stage.show();
         } catch (Exception e) {
             e.printStackTrace();

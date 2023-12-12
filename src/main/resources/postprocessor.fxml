@@ -15,7 +15,7 @@
     </top>
     <center>
         <TabPane fx:id="tabPane">
-            <Tab closable="false" text="Нормальное напряжение">
+            <Tab closable="false" text="Перемещения">
                 <VBox spacing="10">
                     <TableView fx:id="voltageTable">
                         <columns>
@@ -32,7 +32,7 @@
                     </HBox>
                 </VBox>
             </Tab>
-            <Tab closable="false" text="Перемещения">
+            <Tab closable="false" text="Нормальное напряжение">
                 <VBox spacing="10">
                     <TableView fx:id="movingTable">
                         <columns>

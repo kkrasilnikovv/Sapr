@@ -1,18 +1,12 @@
 package kkrasilnikovv.processor;
 
-import kkrasilnikovv.postprocessor.LongitudinalStrongData;
-import kkrasilnikovv.postprocessor.MovingData;
-import kkrasilnikovv.postprocessor.NormalVoltageData;
 import kkrasilnikovv.preprocessor.model.Beam;
 import kkrasilnikovv.preprocessor.model.DataFile;
 import kkrasilnikovv.preprocessor.model.Point;
 import org.apache.commons.math3.linear.LUDecomposition;
 import org.apache.commons.math3.linear.RealMatrix;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import static org.apache.commons.math3.linear.MatrixUtils.createRealMatrix;
 
@@ -26,7 +20,7 @@ public class Calculators {
         List<Double> elasticMods = beams.stream().map(Beam::getElasticity).toList();
         List<Double> areas = beams.stream().map(Beam::getSquare).toList();
         List<Double> lengths = beams.stream().map(Beam::getLength).toList();
-        double[] nodeLoads = points.stream().mapToDouble(Point::getFx).toArray();
+        double[] nodeLoads = points.stream().mapToDouble(Point::getStrong).toArray();
         double[] barLoads = beams.stream().mapToDouble(Beam::getStrongQ).toArray();
         double[][] reactionVectorData = new double[nodeCount][1];
         double[][] reactionMatrixData = new double[nodeCount][nodeCount];
@@ -84,69 +78,7 @@ public class Calculators {
             calculatorBuilder.addNormalVoltageCalculation(new NormalVoltageCalculation(uxa, uxb, uZeros[idx]));
             calculatorBuilder.addLongitudinalForcesCalculation(new LongitudinalForceCalculation(-barLoads[idx], nxb));
         }
-        return calculateWithLength(dataFile, calculatorBuilder.build().getStringRepresentation());
-    }
-
-    public CalculationFile calculateWithLength(DataFile dataFile, List<Map<Integer, Double[]>> objects) {
-        return new CalculationFile(calculateNormalVoltage(dataFile.getBeamList(), objects.get(0)),
-                calculateLongitudinalStrong(dataFile.getBeamList(), objects.get(2)),
-                calculateMoving(dataFile.getBeamList(), objects.get(1)));
-    }
-
-    private Map<Integer, List<NormalVoltageData>> calculateNormalVoltage(List<Beam> beams, Map<Integer, Double[]> normalVoltage) {
-        Map<Integer, List<NormalVoltageData>> normalVoltages = new HashMap<>();
-        for (Beam beam : beams) {
-            List<NormalVoltageData> normalVoltageDataList = new ArrayList<>();
-            Integer id = beam.getId().get();
-            Double[] value = normalVoltage.get(id);
-            double[] x = divideSegment(beam.getX1(), beam.getX2());
-            for (double d : x) {
-                normalVoltageDataList.add(new NormalVoltageData(d, value));
-            }
-            normalVoltages.put(id, normalVoltageDataList);
-        }
-        return normalVoltages;
-    }
-
-    private Map<Integer, List<MovingData>> calculateMoving(List<Beam> beams, Map<Integer, Double[]> moving) {
-        Map<Integer, List<MovingData>> movings = new HashMap<>();
-        for (Beam beam : beams) {
-            List<MovingData> movingDataList = new ArrayList<>();
-            Integer id = beam.getId().get();
-            Double[] value = moving.get(id);
-            double[] x = divideSegment(beam.getX1(), beam.getX2());
-            for (double d : x) {
-                movingDataList.add(new MovingData(d, value));
-            }
-            movings.put(id, movingDataList);
-        }
-        return movings;
-    }
-
-    private Map<Integer, List<LongitudinalStrongData>> calculateLongitudinalStrong(List<Beam> beams, Map<Integer, Double[]> longitudinalStrong) {
-        Map<Integer, List<LongitudinalStrongData>> longitudinalStrongs = new HashMap<>();
-        for (Beam beam : beams) {
-            List<LongitudinalStrongData> longitudinalStrongData = new ArrayList<>();
-            Integer id = beam.getId().get();
-            Double[] value = longitudinalStrong.get(id);
-            double[] x = divideSegment(beam.getX1(), beam.getX2());
-            for (double d : x) {
-                longitudinalStrongData.add(new LongitudinalStrongData(d, value));
-            }
-            longitudinalStrongs.put(id, longitudinalStrongData);
-        }
-        return longitudinalStrongs;
-    }
-
-    private double[] divideSegment(double start, double end) {
-        double[] points = new double[10];
-        double delta = (end - start) / (10 - 1);
-
-        for (int i = 0; i < 10; i++) {
-            points[i] = start + i * delta;
-        }
-
-        return points;
+        return calculatorBuilder.build().getStringRepresentation();
     }
 
     private RealMatrix createDeltaMatrix(double[][] reactionMatrixData, double[][] reactionVectorData) {

@@ -15,17 +15,17 @@ public class Calculator {
         this.longitudinalForceCalculations = longitudinalForceCalculations;
     }
 
-    public List<Map<Integer, Double[]>> getStringRepresentation() {
-        Map<Integer, Double[]> normalVoltage = new HashMap<>();
-        Map<Integer, Double[]> longitudinalStrong = new HashMap<>();
-        Map<Integer, Double[]> moving = new HashMap<>();
+    public CalculationFile getStringRepresentation() {
+        Map<Integer, String> normalVoltage = new HashMap<>();
+        Map<Integer, String> longitudinalStrong = new HashMap<>();
+        Map<Integer, String> moving = new HashMap<>();
 
         for (int barIndex = 0; barIndex < movementsCalculations.size(); barIndex++) {
-            normalVoltage.put(barIndex + 1, normalVoltageCalculations.get(barIndex).representation());
+            normalVoltage.put(barIndex + 1, movementsCalculations.get(barIndex).representation());
             longitudinalStrong.put(barIndex + 1, longitudinalForceCalculations.get(barIndex).representation());
-            moving.put(barIndex + 1, movementsCalculations.get(barIndex).representation());
+            moving.put(barIndex + 1, normalVoltageCalculations.get(barIndex).representation());
         }
-        return List.of(normalVoltage, longitudinalStrong, moving);
+        return new CalculationFile(normalVoltage, longitudinalStrong, moving);
     }
 
     @Override

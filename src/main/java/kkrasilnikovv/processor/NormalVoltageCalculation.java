@@ -1,6 +1,5 @@
 package kkrasilnikovv.processor;
 
-import org.apache.commons.math3.util.Precision;
 
 // Калькулятор нормальных напряжений (Ux)
 public class NormalVoltageCalculation implements SaprCalculationBiFunction {
@@ -16,14 +15,13 @@ public class NormalVoltageCalculation implements SaprCalculationBiFunction {
     }
 
     @Override
-    public Double apply(Double x, Integer integer) {
-        double result = (firstArg * Math.pow(x, 2)) + (secondArg * x) + thirdArg;
-        return Precision.round(result, integer);
+    public String apply(Double x, Integer integer) {
+        return String.format(firstArg +"*x^2+" + secondArg+"*x+"+thirdArg);
     }
 
     @Override
-    public Double[] representation() {
-        return new Double[]{firstArg, secondArg, thirdArg};
+    public String representation() {
+        return String.format(firstArg +"*x^2+" + secondArg+"*x+"+thirdArg);
     }
 
     @Override

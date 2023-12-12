@@ -11,9 +11,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
-import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
-import kkrasilnikovv.postprocessor.Controller;
 import kkrasilnikovv.preprocessor.model.DataFile;
 import kkrasilnikovv.preprocessor.prorepty_adapter.SimpleDoublePropertyAdapter;
 import kkrasilnikovv.preprocessor.prorepty_adapter.SimpleIntegerPropertyAdapter;
@@ -33,7 +31,6 @@ public class Main extends Application {
     private static File dataFile;
     @Getter
     private static File calculationFile;
-    private static Controller controller;
     private final static Gson gson = new GsonBuilder()
             .registerTypeAdapter(SimpleIntegerProperty.class, new SimpleIntegerPropertyAdapter())
             .registerTypeAdapter(SimpleStringProperty.class, new SimpleStringPropertyAdapter())

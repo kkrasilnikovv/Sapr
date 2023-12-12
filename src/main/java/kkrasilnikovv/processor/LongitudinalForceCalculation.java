@@ -1,6 +1,5 @@
 package kkrasilnikovv.processor;
 
-import org.apache.commons.math3.util.Precision;
 
 // Калькулятор продольных сил (Nx)
 public class LongitudinalForceCalculation implements SaprCalculationBiFunction {
@@ -13,14 +12,13 @@ public class LongitudinalForceCalculation implements SaprCalculationBiFunction {
     }
 
     @Override
-    public Double apply(Double x, Integer precision) {
-        double result = (firstArg * x) + secondArg;
-        return Precision.round(result, precision);
+    public String apply(Double x, Integer precision) {
+        return String.format(firstArg +"*x+" + secondArg);
     }
 
     @Override
-    public Double[] representation() {
-        return new Double[]{firstArg, secondArg};
+    public String representation() {
+        return String.format(firstArg +"*x+" + secondArg);
     }
 
     @Override
