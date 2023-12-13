@@ -13,12 +13,12 @@ public class MovementCalculation implements SaprCalculationBiFunction {
 
     @Override
     public String apply(Double x, Integer precision) {
-        return String.format(firstArg +"*x+" + secondArg);
+        return String.format("(" + firstArg + ")" + "*x+" + "(" + secondArg + ")");
     }
 
     @Override
     public String representation() {
-        return String.format(firstArg +"*x+" + secondArg);
+        return String.format("(" + firstArg + ")" + "*x+" + "(" + secondArg + ")");
     }
 
     @Override

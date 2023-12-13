@@ -16,12 +16,12 @@ public class NormalVoltageCalculation implements SaprCalculationBiFunction {
 
     @Override
     public String apply(Double x, Integer integer) {
-        return String.format(firstArg +"*x^2+" + secondArg+"*x+"+thirdArg);
+        return String.format("(" + firstArg + ")" + "*x^2+" + "(" + secondArg + ")" + "*x+" + "(" + thirdArg + ")");
     }
 
     @Override
     public String representation() {
-        return String.format(firstArg +"*x^2+" + secondArg+"*x+"+thirdArg);
+        return String.format("(" + firstArg + ")" + "*x^2+" + "(" + secondArg + ")" + "*x+" + "(" + thirdArg + ")");
     }
 
     @Override

@@ -15,7 +15,7 @@
     </top>
     <center>
         <TabPane fx:id="tabPane">
-            <Tab closable="false" text="Перемещения">
+            <Tab closable="false" text="Нормальное напряжение">
                 <VBox spacing="10">
                     <TableView fx:id="voltageTable">
                         <columns>
@@ -30,9 +30,14 @@
                         <Button fx:id="showValueNormalVoltageButton" text="Показать значение" onAction="#showValueNormalVoltage"/>
                         <Button fx:id="showGraphNormalVoltageButton" text="Показать график" onAction="#showGraphNormalVoltage"/>
                     </HBox>
+                    <HBox spacing="10">
+                        <Label text="Введите значение X:"/>
+                        <TextField fx:id="inputXNormalVoltage"/>
+                        <Button fx:id="calculateNormalVoltageButton" text="Рассчитать" onMouseClicked="#calculateNormalVoltageInPoint"/>
+                    </HBox>
                 </VBox>
             </Tab>
-            <Tab closable="false" text="Нормальное напряжение">
+            <Tab closable="false" text="Перемещения">
                 <VBox spacing="10">
                     <TableView fx:id="movingTable">
                         <columns>
@@ -46,6 +51,11 @@
                     <HBox spacing="10">
                         <Button fx:id="showValueMovingButton" text="Показать значение" onAction="#showValueMoving"/>
                         <Button fx:id="showGraphMovingButton" text="Показать график" onAction="#showGraphMoving"/>
+                    </HBox>
+                    <HBox spacing="10">
+                        <Label text="Введите значение X:"/>
+                        <TextField fx:id="inputXMoving"/>
+                        <Button fx:id="calculateMovingButton" text="Рассчитать" onMouseClicked="#calculateMovingInPoint"/>
                     </HBox>
                 </VBox>
             </Tab>
@@ -63,6 +73,11 @@
                     <HBox spacing="10">
                         <Button fx:id="showValueStrongButton" text="Показать значение" onAction="#showValueStrong"/>
                         <Button fx:id="showGraphStrongButton" text="Показать график" onAction="#showGraphStrong"/>
+                    </HBox>
+                    <HBox spacing="10">
+                        <Label text="Введите значение X:"/>
+                        <TextField fx:id="inputXStrong"/>
+                        <Button fx:id="calculateStrongButton" text="Рассчитать" onMouseClicked="#calculateStrongInPoint"/>
                     </HBox>
                 </VBox>
             </Tab>

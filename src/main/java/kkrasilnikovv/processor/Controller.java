@@ -15,6 +15,8 @@ import kkrasilnikovv.preprocessor.model.DataFile;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -40,6 +42,17 @@ public class Controller {
             Calculators calculators = new Calculators();
             CalculationFile calculationFile = calculators.calculate(mainFile);
             if (Objects.nonNull(calculationFile) && !calculationFile.isEmpty()) {
+                Map<Integer,Double> predelVoltage = new HashMap<>();
+                Map<Integer,Double> startPoint = new HashMap<>();
+                Map<Integer,Double> endPoint = new HashMap<>();
+                mainFile.getBeamList().forEach(beam -> {
+                    predelVoltage.put(beam.getId().get(),beam.getElasticity());
+                    startPoint.put(beam.getId().get(),beam.getX1());
+                    endPoint.put(beam.getId().get(),beam.getX2());
+                });
+                calculationFile.setPredelVoltage(predelVoltage);
+                calculationFile.setStartPoint(startPoint);
+                calculationFile.setEndPoint(endPoint);
                 saveCalculation(calculationFile);
             }
         } else {
