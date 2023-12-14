@@ -7,7 +7,7 @@
 
 ## Пример использования
 
-[![Видео по использованию системы](https://img.youtube.com/vi/kKNRUWi1idY/maxresdefault.jpg)](https://www.youtube.com/watch?v=kKNRUWi1idY)
+[![Видео по использованию системы](https://img.youtube.com/vi/-aVpPhmzHdE/maxresdefault.jpg)](https://www.youtube.com/watch?v=-aVpPhmzHdE)
 
 
 ### Инструкции по установке и запуску
