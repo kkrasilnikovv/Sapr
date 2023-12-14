@@ -19,9 +19,8 @@
 3. Если установленная версия Java меньше 17 или отсутствует, выполните установку согласно инструкциям:
 
 
-   - [**JRE 17 для MacOS:**](https://download.oracle.com/java/17/archive/jdk-17.0.9_macos-aarch64_bin.dmg).
-
-   - [**JRE 17 для Windows:**](https://download.oracle.com/java/17/archive/jdk-17.0.9_windows-x64_bin.exe).
+- [**JRE 17 для MacOS:**](https://download.oracle.com/java/17/archive/jdk-17.0.9_macos-aarch64_bin.dmg)
+- [**JRE 17 для Windows:**](https://download.oracle.com/java/17/archive/jdk-17.0.9_windows-x64_bin.exe)
 
 ## Пример использования
 
